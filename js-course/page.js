@@ -9,29 +9,29 @@ assert(Assignment, "`page.js` requires `assignment.js`");
 var Page = Page || {
   TITLE: null,
 
-  WRITEUP_FILENAME: "js-student/writeup.yaml",
-  // The cached contents of the writeup file.
-  parsedWriteup: null,
+  // WRITEUP_FILENAME: "js-student/writeup.yaml",
+  // // The cached contents of the writeup file.
+  // parsedWriteup: null,
 };
 
-Page.readWriteupFile = function () {
-  if (Page.parsedWriteup == null) {
-    try {
-      Page.parsedWriteup = {
-        writeup: Parser.parseYamlFile(Page.WRITEUP_FILENAME),
-      };
-    } catch (error) {
-      console.error(error);
-      Page.parsedWriteup = { error };
-    }
-  }
-  return Page.parsedWriteup;
-};
+// Page.readWriteupFile = function () {
+//   if (Page.parsedWriteup == null) {
+//     try {
+//       Page.parsedWriteup = {
+//         writeup: Parser.parseYamlFile(Page.WRITEUP_FILENAME),
+//       };
+//     } catch (error) {
+//       console.error(error);
+//       Page.parsedWriteup = { error };
+//     }
+//   }
+//   return Page.parsedWriteup;
+// };
 
 $(() => {
   const MDASH = " &mdash; ";
 
-  const assignmentNum = `COS426 Assignment ${Assignment.ASSIGNMENT_NUM}`;
+  const assignmentNum = `COS426 Final Project`;
   let title;
   if (Page.TITLE == null) {
     title = Assignment.ASSIGNMENT_NAME;
@@ -49,33 +49,4 @@ $(() => {
   $("#title").html(
     [`<div class="assignment">${assignmentNum}</div>`, title].join("")
   );
-
-  // set student info in page
-  const $studentDiv = $("#student");
-
-  function setStudentInfoError(error) {
-    $studentDiv.text(`Error: Could not get student info: ${error}`);
-  }
-
-  function setStudentInfo(parsed) {
-    if (parsed.error) {
-      setStudentInfoError(parsed.error);
-      return;
-    }
-    const studentWriteup = parsed.writeup;
-
-    const studentInfo = studentWriteup.student;
-    if (studentInfo == null) {
-      setStudentInfoError("Missing `student` section");
-      return;
-    }
-
-    const name = studentInfo.name;
-    const netid = studentInfo.netid;
-    $studentDiv.text(`${name ?? "MISSING NAME"} <${netid ?? "MISSING NETID"}>`);
-  }
-
-  if ($studentDiv.length > 0) {
-    setStudentInfo(Page.readWriteupFile());
-  }
 });
