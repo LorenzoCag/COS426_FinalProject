@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- try to discourage browser from keeping page in cache -->
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <meta http-equiv="cache-control" content="no-store" />
+
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/style.css"
+    />
+  </head>
+
+  <body>
+    <script src="js-lib/gif/LZWEncoder.js"></script>
+    <script src="js-lib/gif/NeuQuant.js"></script>
+    <script src="js-lib/gif/GIFEncoder.js"></script>
+    <script src="js-lib/gif/b64.js"></script>
+    <script src="js-lib/dat.gui.js"></script>
+    <script src="js-lib/jquery.slim.min.js"></script>
+    <script src="js-lib/js-yaml.min.js"></script>
+
+    <script src="assignment.js"></script>
+    <script src="js-course/global.js"></script>
+
+    <script src="js-student/image.js"></script>
+    <script src="js-student/filters.js"></script>
+
+    <script src="js-course/parser.js"></script>
+    <script src="js-course/guiConfig.js"></script>
+    <script src="js-course/guiSetup.js"></script>
+    <script src="js-course/gui.js"></script>
+    <script src="js-course/main.js"></script>
+    <script src="js-course/imageMain.js"></script>
+    <script src="js-course/page.js"></script>
+    <script>
+      Page.TITLE = "Batch Mode";
+      Gui.hidden = true;
+      Gui.batchMode = true;
+    </script>
+
+    <div id="main-div">
+      <h1 id="title"></h1>
+      <h2>
+        Switch to:
+        <a href="index.html">Interactive Editor</a> |
+        <a href="writeup.html">Writeup</a>
+      </h2>
+      <h2 id="student"></h2>
+
+      <div id="error">Error: See Console</div>
+      <div id="loading">Processing...</div>
+
+      <div>
+        <div id="canvas-div" class="image">
+          <canvas id="canvas"></canvas>
+        </div>
+        <div id="result-div" class="image"></div>
+      </div>
+
+      <!-- for downloading -->
+      <div>
+        <script src="js-course/download.js"></script>
+        <input type="text" id="download-filename" placeholder="File name" />
+        <button type="button" id="download-button">Download</button>
+        <a id="download-link" download="download"></a>
+      </div>
+    </div>
+    <div id="alert-div" title="alert"></div>
+  </body>
+</html>

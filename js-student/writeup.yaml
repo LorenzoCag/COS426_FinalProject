@@ -1,0 +1,474 @@
+# This file was generated for the student.
+
+# For information on YAML, see: https://yaml.org/spec/1.2.2/#chapter-2-language-overview
+
+# YAML strings can be unquoted, quoted with single quotes, or quoted with
+# double quotes. The type of quoting matters if you have special characters in
+# the string, such as ":" or "#". To avoid ambiguity, we will use "block
+# scalar" strings for `description_html`, `link`, and `caption_html`, in which
+# the string starts on the next line and you can put any character you want.
+# For more information, see: https://yaml-multiline.info/
+
+# In `description_html` and `caption_html`, feel free to use HTML tags as you
+# wish. These will show up as-is in `writeup.html`.
+
+# Please fill in your name and NetID
+# Your NetID is the part of your email before "@princeton.edu"
+student:
+  name: Alexander Delistathis
+  netid: ad5812
+
+# If you would like to use any of your free late days on this assignment, please
+# indicate how many here. This should be a non-negative integer; if you would
+# like to add any special comments (for example, to reference an Ed post asking
+# for special circumstances), please write a YAML comment here with the '#'
+# character.
+late_days_used: 1
+
+# Please list the netids of whom you collaborated with for this assignment.
+collaboration: []
+
+features:
+  - feature: Brightness
+    required: true
+    implemented: true
+    description_html: >
+      This feature was implemented by the course staff. I used it as an example of how to loop over the pixels in an image.
+      <p></p>
+      Here is an example output where the image is made brighter with <a href="batch.html?Push_Image=flower.jpg&Brightness=0.3" target="_blank">the luminance slider set to 0.3</a>:
+      <img src="results/luminance0.3.png" />
+      <p></p>
+      Here is an example output where the image is made darker with <a href="batch.html?Push_Image=flower.jpg&Brightness=-0.5" target="_blank">the luminance slider set to -0.5</a>:
+      <img src="results/luminance0.5.png" />
+      <p></p>
+      I did not encounter any particular challenges in implementing this.
+    results: []
+
+  - feature: Contrast
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in the image (left-to-right, top-to-bottom), interpolating
+      between corresponding pixel in constant gray image (0.5, 0.5, 0.5) at ratio = -1
+      and original pixel at ratio = 0 using the contrast() helper function.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Contrast=-1
+        picture: results/contrastResult1.png
+        caption_html: >
+          First Contrast Result
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Contrast=0.7
+        picture: results/contrastResult2.png
+        caption_html: >
+          Second Contrast Result
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Contrast=-0.8
+        picture: results/contrastResult3.png
+        caption_html: >
+          Third Contrast Result
+
+  - feature: Gamma
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), applying a
+      gamma correction to each one using the gammaCorrect() helper function.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Gamma=1
+        picture: results/gammaResult1.png
+        caption_html: >
+          First Gamma Result
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Gamma=-1.6
+        picture: results/gammaResult2.png
+        caption_html: >
+          Second Gamma Result
+
+  - feature: Vignette
+    required: false
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), changing the
+      color of each based on its distance to the center of the image.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Vignette=0.25;1
+        picture: results/vignetteResult1.png
+        caption_html: >
+          First Vignette Result
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Vignette=0;0.75
+        picture: results/vignetteResult2.png
+        caption_html: >
+          Second Vignette Result
+
+  - feature: Histogram Equalization
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Grayscale
+    required: true
+    implemented: true
+    description_html: >
+      This feature was implemented by the course staff.
+    results: []
+
+  - feature: Saturation
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), changing the
+      color of each based on its luminance and the inputted ratio, using the
+      saturate() helper function.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Saturation=1
+        picture: results/saturationResult1.png
+        caption_html: >
+          First Saturation Result
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Saturation=-0.5
+        picture: results/saturationResult2.png
+        caption_html: >
+          Second Saturation Result
+
+  - feature: White Balance
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), applying
+      Von Kries method to each.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=town.jpg&White_Balance=rgb(128,128,128)
+        picture: results/whiteBalanceResult.png
+        caption_html: >
+          White Balance Result
+
+  - feature: Histogram Matching
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Gaussian
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), applying
+      Gaussian filter to each using window size of `2 * winR + 1`.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Gaussian=4
+        picture: results/gaussianResult1.png
+        caption_html: >
+          First Gaussian Result
+      - link: >
+          batch.html?Push_Image=man.jpg&Gaussian=7
+        picture: results/gaussianResult2.png
+        caption_html: >
+          Second Gaussian Result
+
+  - feature: Edge Detect
+    required: false
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), applying
+      edge-detection kernel to each using convolve() helper function and then
+      inverting each pixel for enhanced visualization.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Edge=
+        picture: results/edgeDetectResult1.png
+        caption_html: >
+          First Edge Detect Result
+      - link: >
+          batch.html?Push_Image=woman.jpg&Edge=
+        picture: results/edgeDetectResult2.png
+        caption_html: >
+          Second Edge Detect Result
+
+  - feature: Sharpen
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), applying
+      sharpen kernel to each using convolve() helper function.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Sharpen=
+        picture: results/sharpenResult1.png
+        caption_html: >
+          First Sharpen Result
+      - link: >
+          batch.html?Push_Image=woman.jpg&Sharpen=
+        picture: results/sharpenResult2.png
+        caption_html: >
+          Second Sharpen Result
+
+  - feature: Median Filter
+    required: false
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), setting each
+      one to the median of its neighbors using window size of `2 * winR + 1` and
+      calculating the median separately for each color channel.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Median=1
+        picture: results/medianResult1.png
+        caption_html: >
+          First Median Result
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Median=3
+        picture: results/medianResult2.png
+        caption_html: >
+          Second Median Result
+      - link: >
+          batch.html?Push_Image=leaves.jpg&Median=5
+        picture: results/medianResult3.png
+        caption_html: >
+          Third Median Result
+
+  - feature: Bilateral Filter
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), replacing each
+      with a weighted average of its neighbors, 
+      using a window size of `2 * winR + 1`.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Bilateral=4;2
+        picture: results/bilateralResult1.png
+        caption_html: >
+          First Bilateral Result
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Bilateral=5;3
+        picture: results/bilateralResult2.png
+        caption_html: >
+          Second Bilateral Result
+
+  - feature: Quantize
+    required: true
+    implemented: true
+    description_html: >
+      This feature was implemented by the course staff.
+    results: []
+
+  - feature: Random Dither
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), replacing each
+      with a quantization of itself that includes random noise.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Random=
+        picture: results/randomDitherResult.png
+        caption_html: >
+          Random Dither Result
+
+  - feature: Floyd-Steinberg Dither
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), diffusing
+      error that results from quantization of each one to its neighbors 
+      that have not been quantized yet.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Floyd-Steinberg=
+        picture: results/floyd-steinbergDitherResult.png
+        caption_html: >
+          Floyd-Steinberg Dither Result
+
+  - feature: Ordered Dither
+    required: false
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), quanitizing
+      each one and its neighbors that are within the filter `D` in the numbered order.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Ordered=
+        picture: results/orderedDitherResult.png
+        caption_html: >
+          Ordered Dither Result
+
+  - feature: Sampling
+    required: true
+    implemented: true
+    description_html: >
+      Sample pixel at given location in given image using either Point, Bilinear,
+      or Gaussian sampling.
+    results: []
+
+  - feature: Translate
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in soon-to-be transformed image (left-to-right, top-to-bottom),
+      setting each one to its corresponding pixel sampled from the input image (using the
+      inverse translation transformation).
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=flower.jpg&Translate=-317;-182;point
+        picture: results/translateResult1.png
+        caption_html: >
+          First Translate Result
+      - link: >
+          batch.html?Push_Image=flower.jpg&Translate=-317;-182;bilinear
+        picture: results/translateResult2.png
+        caption_html: >
+          Second Translate Result
+      - link: >
+          batch.html?Push_Image=flower.jpg&Translate=-317;-182;gaussian
+        picture: results/translateResult3.png
+        caption_html: >
+          Third Translate Result
+
+  - feature: Scale
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in image (left-to-right, top-to-bottom), setting each one
+      to its corresponding pixel sampled from the input image (using the inverse
+      scaling transformation).
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Scale=2.03;point
+        picture: results/scaleResult1.png
+        caption_html: >
+          First Scale Result
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Scale=2.03;bilinear
+        picture: results/scaleResult2.png
+        caption_html: >
+          Second Scale Result
+      - link: >
+          batch.html?Push_Image=mesa.jpg&Scale=2.03;gaussian
+        picture: results/scaleResult3.png
+        caption_html: >
+          Third Scale Result
+
+  - feature: Rotate
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Swirl
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Composite
+    required: true
+    implemented: true
+    description_html: >
+      Traverse all pixels in foreground and background images simultaneously
+      (left-to-right, top-to-bottom), 
+      setting corresponding pixels in output image to composition of both.
+    results:
+      # You can include as many results as you want, but please at least include
+      # the following:
+      - link: >
+          batch.html?Push_Image=man.jpg&Push_Image=doge.jpg&Push_Image=alpha.png&Get_Alpha=&Composite=
+        picture: results/compositeResult.png
+        caption_html: >
+          Composite Result
+
+  - feature: Morph
+    required: true
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Palette
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Paint-by-numbers
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: xDoG
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+  - feature: Art Contest
+    required: false
+    implemented: false
+    description_html: >
+      N/A
+    results: []
+
+# Students who used AI-based coding tool(s) to work on this assignment should
+# answer these questions: What tool(s) did you use? How did it work for you? Was
+# it helpful? (To add text here, change the null to > and add indented text
+# below it.)
+ai_code_tools: >
+  ChatGPT, Google Gemini
+
+# [OPTIONAL] Please provide us with feedback on your experience working on this
+# assignment. For example, approximately how many hours did you spend on it?
+# What parts were the most difficult or confusing to work through? Do you have
+# any suggestions on how to improve this assignment for the future? Thank you
+# for your feedback! (To add text here, change the null to > and add indented
+# text below it.)
+feedback: null
+
+# Ignore below here. DO NOT modify this section.
+assignment:
+  number: 1
+  codebase: 9fa0b2fce0e5859b61d703c0eb2c713ec2456efe
