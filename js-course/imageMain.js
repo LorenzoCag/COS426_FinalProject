@@ -96,7 +96,7 @@ Main.init = function () {
   Main.ctx = Main.canvas.getContext("2d");
 
   Main.gifEncoder = new GIFEncoder();
-  Main.gifEncoder.setRepeat(0);
+  Main.gifEncoder.setRepeat(0); // 0 = infinite loop
   Main.gifEncoder.setDelay(0.05);
   Main.gifEncoder.start();
 

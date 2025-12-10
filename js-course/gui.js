@@ -367,6 +367,50 @@ Gui.makeFilterInstance = function (
   }
 
   if (!Gui.hidden) {
+    // Add continuous animation button for Custom Filter
+    if (filterDef.name === "Custom Filter" && !filterDef.isGlobal) {
+      // Find the slider parameter
+      let sliderParamIndex = -1;
+      for (const [paramIndex, paramDef] of Array.enumerated(filterDef.paramDefs)) {
+        if (paramDef.type === GuiConfig.ParamDef.Type.SLIDER) {
+          sliderParamIndex = paramIndex;
+          break;
+        }
+      }
+
+      if (sliderParamIndex !== -1) {
+        filterInst.isAnimating = false;
+        const animationButtonObj = { "▶ Animate": () => {} };
+
+        const toggleAnimation = () => {
+          if (filterInst.isAnimating) {
+            // Stop animation
+            Main.stopContinuousAnimation();
+            filterInst.isAnimating = false;
+            const oldButton = filterInst.animationButton;
+            if (oldButton) {
+              folder.remove(oldButton);
+            }
+            animationButtonObj["▶ Animate"] = toggleAnimation;
+            filterInst.animationButton = folder.add(animationButtonObj, "▶ Animate");
+          } else {
+            // Start animation
+            Main.startContinuousAnimation(filterInst, sliderParamIndex);
+            filterInst.isAnimating = true;
+            const oldButton = filterInst.animationButton;
+            if (oldButton) {
+              folder.remove(oldButton);
+            }
+            animationButtonObj["⏸ Stop"] = toggleAnimation;
+            filterInst.animationButton = folder.add(animationButtonObj, "⏸ Stop");
+          }
+        };
+
+        animationButtonObj["▶ Animate"] = toggleAnimation;
+        filterInst.animationButton = folder.add(animationButtonObj, "▶ Animate");
+      }
+    }
+
     if (!filterDef.isGlobal) {
       // add delete button
       let deleteButtonName;
@@ -381,6 +425,11 @@ Gui.makeFilterInstance = function (
       } else {
         deleteButtonName = "Delete";
         deleteButtonFunc = () => {
+          // Stop animation if this filter is being animated
+          if (filterInst.isAnimating && Main.continuousAnimationFilterInst === filterInst) {
+            Main.stopContinuousAnimation();
+            filterInst.isAnimating = false;
+          }
           Gui.deleteHistoryEntry(filterInst);
           Gui.handleControlsChanged();
         };

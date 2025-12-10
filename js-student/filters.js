@@ -1266,8 +1266,46 @@ Filters.customFilter = function (image, value) {
   // if you want to code up multiple things for the art contest.
 
   // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("customFilter is not implemented yet");
+  // Animated ripple filter - ripples flow outward continuously
+  // value (0-1) controls the intensity/amplitude of ripples (fixed when animating)
+  // Uses Main.animationTime for continuous animation (set by animation system)
+  
+  const newImage = new Image426(image.width, image.height);
+  const centerX = image.width / 2;
+  const centerY = image.height / 2;
+  
+  // Ripple parameters
+  const amplitude = value * 20; // Maximum displacement in pixels (controlled by user)
+  const frequency = 0.05; // How many ripples per pixel distance
+  const speed = 2.0; // How fast ripples move outward (increased for visible movement)
+  
+  // Use global animation time if available (continuously increasing), otherwise use 0
+  const time = (typeof Main !== 'undefined' && Main.animationTime != null) 
+    ? Main.animationTime 
+    : 0;
+  
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      // Calculate distance from center
+      const dx = x - centerX;
+      const dy = y - centerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Calculate ripple displacement with time offset to make ripples flow outward
+      // Subtracting time from distance makes ripples appear to propagate outward continuously
+      const ripple = Math.sin(distance * frequency - time * speed) * amplitude;
+      
+      // Calculate source coordinates with ripple distortion
+      const angle = Math.atan2(dy, dx);
+      const sourceX = x + Math.cos(angle) * ripple;
+      const sourceY = y + Math.sin(angle) * ripple;
+      
+      // Sample the pixel using point sampling (faster than bilinear)
+      const color = Filters.samplePixel(image, sourceX, sourceY, "point");
+      newImage.setPixel(x, y, color);
+    }
+  }
 
-  return image;
+  return newImage;
   // --------------- STUDENT CODE END ----------------
 };

@@ -29,6 +29,16 @@ var Main = Main || {
 
   // time in ms before "working..." popup is displayed
   workingDialogDelay: 500,
+
+  // Real-time continuous animation system
+  continuousAnimationRunning: false,
+  continuousAnimationFrameId: null,
+  continuousAnimationStartTime: 0,
+  continuousAnimationSpeed: 1.0, // Animation speed multiplier
+  continuousAnimationFilterInst: null,
+  continuousAnimationLastUpdateTime: 0,
+  continuousAnimationUpdateInterval: 50, // Update filter every 50ms (~20fps)
+  animationTime: 0, // Global time value for ripple animation (continuously increasing)
 };
 
 Main.refreshDisplay = function () {
@@ -141,9 +151,13 @@ Main.applyFilters = function () {
       };
       baseStack.push(baseCopy);
     } else if (filterDef.isFilter) {
-      // APPLY FILTER
-      // use cache?
+      // Apply
+      
+      const isAnimating = Main.continuousAnimationRunning && 
+                         Main.continuousAnimationFilterInst === filterInst;
+      
       if (
+        !isAnimating &&
         cachedData != null &&
         cachedData.lastFilterName === filterName &&
         arraysEqual(args, cachedData.args)
@@ -229,8 +243,7 @@ Main.applyFilters = function () {
       }
     }
 
-    // taking too long? halt the function to update the display, then
-    // immediately resume
+    
     if (totalFilterTime > Main.applyRefreshTime) {
       clearTimeout(Main.applyTimeout);
       Main.applyTimeout = setTimeout(Main.applyFilters, 0);
@@ -255,17 +268,31 @@ Main.applyFilters = function () {
     Main.animatedValData.current += Main.animatedValData.step;
     const value = Main.animatedValData.current;
 
+    // Track cycles for smooth looping
+    if (!Main.animatedValData.cycleCount) {
+      Main.animatedValData.cycleCount = 0;
+    }
+
     // encode + display gif
     if (Main.animatedValData.isDone(value)) {
-      Main.gifEncoder.finish();
-      const gifBinary = Main.gifEncoder.stream().getData();
-      const gifUrl = "data:image/gif;base64," + encode64(gifBinary);
-      $("#canvas-div").hide();
-      $("#result-div")
-        .html("")
-        .append($("<img>", { id: "animated-gif", src: gifUrl }));
+      Main.animatedValData.cycleCount++;
+      
+      // Generate 2 full cycles for smooth looping, then finish
+      if (Main.animatedValData.cycleCount >= 2) {
+        Main.gifEncoder.finish();
+        const gifBinary = Main.gifEncoder.stream().getData();
+        const gifUrl = "data:image/gif;base64," + encode64(gifBinary);
+        $("#canvas-div").hide();
+        $("#result-div")
+          .html("")
+          .append($("<img>", { id: "animated-gif", src: gifUrl }));
 
-      Main.hideProcessingText();
+        Main.hideProcessingText();
+      } else {
+        // Loop back to start for another cycle
+        Main.animatedValData.current = Main.animatedValData.start;
+        Main.animatedValData.onChangeFunc(Main.animatedValData.current);
+      }
     } else {
       Main.animatedValData.onChangeFunc(value);
     }
@@ -277,6 +304,66 @@ Main.handleControlsChanged = function () {
   if (!Main.usingMeshes && !Main.allImagesLoaded) return;
   Main.totalApplyTimeSinceFirstFilter = 0;
   Main.applyFilters();
+};
+
+/**
+ * Starts continuous real-time animation for a filter parameter.
+ * @param {!Object} filterInst - The filter instance to animate.
+ * @param {number} paramIndex - The index of the parameter to animate.
+ */
+Main.startContinuousAnimation = function (filterInst, paramIndex) {
+  if (Main.continuousAnimationRunning) {
+    Main.stopContinuousAnimation();
+  }
+
+  Main.continuousAnimationRunning = true;
+  Main.continuousAnimationStartTime = performance.now();
+  Main.continuousAnimationLastUpdateTime = 0;
+  Main.animationTime = 0; // Reset time when starting
+  Main.continuousAnimationFilterInst = filterInst;
+  Main.continuousAnimationParamIndex = paramIndex;
+
+  console.log('Starting continuous animation');
+  Main.continuousAnimationLoop();
+};
+
+/**
+ * Stops the continuous animation.
+ */
+Main.stopContinuousAnimation = function () {
+  Main.continuousAnimationRunning = false;
+  if (Main.continuousAnimationFrameId != null) {
+    cancelAnimationFrame(Main.continuousAnimationFrameId);
+    Main.continuousAnimationFrameId = null;
+  }
+  // Reset animation time when stopped
+  Main.animationTime = 0;
+};
+
+/**
+ * Continuous animation loop that updates filter parameters in real-time.
+ * For ripple animation, this continuously increases time while keeping value fixed.
+ */
+Main.continuousAnimationLoop = function () {
+  if (!Main.continuousAnimationRunning) return;
+
+  const now = performance.now();
+  const elapsed = (now - Main.continuousAnimationStartTime) * Main.continuousAnimationSpeed;
+  
+  // Continuously increase animation time (in radians, so ripples flow outward)
+  // Time increases indefinitely to create continuous flow
+  Main.animationTime = elapsed * 0.001;
+  
+
+  
+  // Throttle filter updates - only update every n milliseconds
+  if (now - Main.continuousAnimationLastUpdateTime >= Main.continuousAnimationUpdateInterval) {
+    Main.continuousAnimationLastUpdateTime = now;
+    // Trigger filter reapplication (value stays the same, time increases)
+    Main.handleControlsChanged();
+  }
+
+  Main.continuousAnimationFrameId = requestAnimationFrame(() => Main.continuousAnimationLoop());
 };
 
 $(() => {
