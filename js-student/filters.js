@@ -415,7 +415,7 @@ Filters.histogramEqualizationFilter = function (image) {
     cdf[i] = run / N;
   }
 
-  // 3) Remap L via CDF and write back
+  // Remap L
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       //
