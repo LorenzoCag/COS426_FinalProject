@@ -391,7 +391,43 @@ Filters.vignetteFilter = function (image, innerR, outerR) {
 Filters.histogramEqualizationFilter = function (image) {
   // Hint: Build a normalized CDF of the L channel in the image.
   // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("histogramEqualizationFilter is not implemented yet");
+  const w = image.width,
+    h = image.height;
+  const N = w * h;
+  const B = 256; // bins
+  const hist = new Array(B).fill(0);
+
+  // build L channel
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const hsl = image.getPixel(x, y).toHsl();
+      const L = hsl.data[2]; // [H,S,L]
+      const bin = clamp(Math.floor(L * (B - 1)), 0, B - 1);
+      hist[bin]++;
+    }
+  }
+
+  // CDF
+  const cdf = new Array(B).fill(0);
+  let run = 0;
+  for (let i = 0; i < B; i++) {
+    run += hist[i];
+    cdf[i] = run / N;
+  }
+
+  // 3) Remap L via CDF and write back
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      //
+      const hsl = image.getPixel(x, y).toHsl();
+      const L = hsl.data[2];
+      const bin = clamp(Math.floor(L * (B - 1)), 0, B - 1);
+      hsl.data[2] = cdf[bin];
+      const out = hsl.toRgb().clamp();
+      out.alpha = image.getPixel(x, y).alpha;
+      image.setPixel(x, y, out);
+    }
+  }
 
   return image;
   // --------------- STUDENT CODE END ----------------
