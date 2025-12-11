@@ -291,7 +291,15 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   {
     name: "Edge",
     folderName: "Filters",
-    paramDefs: [],
+    canAnimate: true,
+    paramDefs: [
+      {
+        name: "factor",
+        type: GuiConfig.ParamDef.Type.SLIDER,
+        defaultVal: 1,
+        sliderRange: { min: 1, max: 5 },
+      },
+    ],
   },
   {
     name: "Median",

@@ -287,7 +287,7 @@ Filters.contrastFilter = function (image, ratio) {
       const color = image.getPixel(x, y);
       const hsl = color.toHsl();
 
-      if (hsl.data[0] >= 0.14 && hsl.data[0] <= 0.19) {
+      if (hsl.data[0] >= 0.14 && hsl.data[0] <= 0.22) {
         const contrasted = color.data.map((value) =>
           contrast(value, K, ratio * Math.sin(time))
         );
@@ -588,52 +588,34 @@ Filters.gaussianFilter = function (image, sigma) {
  * @param {!Image426} image
  * @returns {!Image426} The result image.
  */
-Filters.edgeFilter = function (image) {
-  // You might want to define a convolution utility that convolves an image with
-  // some arbitrary input kernel.
-  // For this filter, we recommend inverting pixel values to enhance edge
-  // visualization.
-  // -------------- STUDENT CODE BEGIN ---------------
+Filters.edgeFilter = function (image, factor) {
   let newImg = new Image426(image.width, image.height);
 
-  const kernel = [
-    [-1, -1, -1],
-    [-1, 8, -1],
-    [-1, -1, -1],
-  ];
+  // Use global animation time if available (continuously increasing), otherwise use 0
+  let time =
+    typeof Main !== "undefined" && Main.animationTime != null
+      ? Main.animationTime
+      : 0;
 
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
-      let pixels = [
-        [
-          image.getPixel(x - 1, y - 1),
-          image.getPixel(x, y - 1),
-          image.getPixel(x + 1, y - 1),
-        ],
-        [
-          image.getPixel(x - 1, y),
-          image.getPixel(x, y),
-          image.getPixel(x + 1, y),
-        ],
-        [
-          image.getPixel(x - 1, y + 1),
-          image.getPixel(x, y + 1),
-          image.getPixel(x + 1, y + 1),
-        ],
-      ];
+      const color = image.getPixel(x, y);
+      const hsl = color.toHsl();
 
-      let output = convolve(pixels, kernel);
+      if (hsl.data[0] >= 0.22 && hsl.data[0] <= 0.39) {
+        let output = image.getPixel(
+          x + Math.round(factor * Math.sin(time)),
+          y + Math.round(factor * Math.sin(time))
+        );
 
-      output[0] = 1 - output[0];
-      output[1] = 1 - output[1];
-      output[2] = 1 - output[2];
-
-      newImg.setPixel(x, y, new PixelColor(output));
+        newImg.setPixel(x, y, output);
+      } else {
+        newImg.setPixel(x, y, color);
+      }
     }
   }
 
   return newImg;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -950,7 +932,6 @@ Filters.samplePixel = function (image, x, y, mode) {
   y = clamp(y, 0, image.height - 1);
 
   if (mode === "bilinear") {
-    // -------------- STUDENT CODE BEGIN ---------------
     let inputPixel = image.getPixel(x, y);
 
     let neighboringPixels = [
@@ -973,9 +954,7 @@ Filters.samplePixel = function (image, x, y, mode) {
       .multiplyBy(1 / 4);
 
     return outputPixel;
-    // --------------- STUDENT CODE END ----------------
   } else if (mode === "gaussian") {
-    // -------------- STUDENT CODE BEGIN ---------------
     let inputPixel = image.getPixel(x, y);
     let outputPixel = new PixelColor([0, 0, 0], inputPixel.alpha);
 
@@ -997,7 +976,6 @@ Filters.samplePixel = function (image, x, y, mode) {
     outputPixel.divideBy(gaussianWeightSum);
 
     return outputPixel;
-    // --------------- STUDENT CODE END ----------------
   }
   // default to basic point sampling
   return image.getPixel(Math.round(x), Math.round(y));
@@ -1050,7 +1028,6 @@ Filters.translateFilter = function (image, dx, dy, sampleMode) {
  * @returns {!Image426} The result image.
  */
 Filters.scaleFilter = function (image, ratio, sampleMode) {
-  // -------------- STUDENT CODE BEGIN ---------------
   let transformedImage = new Image426(
     Math.round(image.width * ratio),
     Math.round(image.height * ratio)
@@ -1070,7 +1047,6 @@ Filters.scaleFilter = function (image, ratio, sampleMode) {
   }
 
   return transformedImage;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
