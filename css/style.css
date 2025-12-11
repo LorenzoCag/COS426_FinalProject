@@ -153,14 +153,3 @@ button {
   background-image: linear-gradient(to bottom, #333, #222);
   filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr=#333, endColorstr=#222);
 }
-
-/* Writeup */
-span.not-implemented {
-  text-decoration: line-through;
-}
-h2.feature-title {
-  display: inline;
-}
-.writeup-results :is(img, video) {
-  display: block;
-}

@@ -273,21 +273,36 @@ Filters.brightnessFilter = function (image, ratio) {
  * @returns {!Image426} The given image (now modified).
  */
 Filters.contrastFilter = function (image, ratio) {
+  let newImage = new Image426(image.width, image.height);
   const K = 1.0; // maximum pixel value
 
-  // Formula:
-  //   value = (value - K/2) * (tan ((contrast + 1) * PI/4)) + K/2;
-  // Reference: https://en.wikipedia.org/wiki/Image_editing#Contrast_change_and_brightening
-  // -------------- STUDENT CODE BEGIN ---------------
+  // Use global animation time if available (continuously increasing), otherwise use 0
+  let time =
+    typeof Main !== "undefined" && Main.animationTime != null
+      ? Main.animationTime
+      : 0;
+
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
-      const contrasted = color.data.map((value) => contrast(value, K, ratio));
-      image.setPixel(x, y, new PixelColor(contrasted, color.alpha).clamp());
+      const hsl = color.toHsl();
+
+      if (hsl.data[0] >= 0.14 && hsl.data[0] <= 0.19) {
+        const contrasted = color.data.map((value) =>
+          contrast(value, K, ratio * Math.sin(time))
+        );
+        newImage.setPixel(
+          x,
+          y,
+          new PixelColor(contrasted, color.alpha).clamp()
+        );
+      } else {
+        newImage.setPixel(x, y, color);
+      }
     }
   }
 
-  return image;
+  return newImage;
   // --------------- STUDENT CODE END ----------------
 };
 
@@ -1258,48 +1273,40 @@ Filters.xDoGFilter = function (image, value) {
 };
 
 Filters.customFilter = function (image, value) {
-  // You can use this filter to do whatever you want, for example trying out
-  // some new idea or implementing something for the art contest.
-
-  // Currently the `value` argument will be a number in the range [0, 1].
-  // You could use this value to switch between different versions of your code
-  // if you want to code up multiple things for the art contest.
-
-  // -------------- STUDENT CODE BEGIN ---------------
   // Animated ripple filter - ripples flow outward continuously
   // value (0-1) controls the intensity/amplitude of ripples (fixed when animating)
   // Uses Main.animationTime for continuous animation (set by animation system)
-  
-  const newImage = new Image426(image.width, image.height);
+  let newImage = new Image426(image.width, image.height);
   const centerX = image.width / 2;
   const centerY = image.height / 2;
-  
+
   // Ripple parameters
   const amplitude = value * 20; // Maximum displacement in pixels (controlled by user)
   const frequency = 0.05; // How many ripples per pixel distance
   const speed = 2.0; // How fast ripples move outward (increased for visible movement)
-  
+
   // Use global animation time if available (continuously increasing), otherwise use 0
-  const time = (typeof Main !== 'undefined' && Main.animationTime != null) 
-    ? Main.animationTime 
-    : 0;
-  
+  let time =
+    typeof Main !== "undefined" && Main.animationTime != null
+      ? Main.animationTime
+      : 0;
+
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       // Calculate distance from center
       const dx = x - centerX;
       const dy = y - centerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       // Calculate ripple displacement with time offset to make ripples flow outward
       // Subtracting time from distance makes ripples appear to propagate outward continuously
       const ripple = Math.sin(distance * frequency - time * speed) * amplitude;
-      
+
       // Calculate source coordinates with ripple distortion
       const angle = Math.atan2(dy, dx);
       const sourceX = x + Math.cos(angle) * ripple;
       const sourceY = y + Math.sin(angle) * ripple;
-      
+
       // Sample the pixel using point sampling (faster than bilinear)
       const color = Filters.samplePixel(image, sourceX, sourceY, "point");
       newImage.setPixel(x, y, color);
@@ -1307,5 +1314,4 @@ Filters.customFilter = function (image, value) {
   }
 
   return newImage;
-  // --------------- STUDENT CODE END ----------------
 };

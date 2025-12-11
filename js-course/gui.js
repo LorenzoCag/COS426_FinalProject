@@ -367,11 +367,16 @@ Gui.makeFilterInstance = function (
   }
 
   if (!Gui.hidden) {
-    // Add continuous animation button for Custom Filter
-    if (filterDef.name === "Custom Filter" && !filterDef.isGlobal) {
+    // Add continuous animation buttons for appropriate filters
+    if (
+      (filterDef.name === "Contrast" || filterDef.name === "Custom Filter") &&
+      !filterDef.isGlobal
+    ) {
       // Find the slider parameter
       let sliderParamIndex = -1;
-      for (const [paramIndex, paramDef] of Array.enumerated(filterDef.paramDefs)) {
+      for (const [paramIndex, paramDef] of Array.enumerated(
+        filterDef.paramDefs
+      )) {
         if (paramDef.type === GuiConfig.ParamDef.Type.SLIDER) {
           sliderParamIndex = paramIndex;
           break;
@@ -392,7 +397,10 @@ Gui.makeFilterInstance = function (
               folder.remove(oldButton);
             }
             animationButtonObj["▶ Animate"] = toggleAnimation;
-            filterInst.animationButton = folder.add(animationButtonObj, "▶ Animate");
+            filterInst.animationButton = folder.add(
+              animationButtonObj,
+              "▶ Animate"
+            );
           } else {
             // Start animation
             Main.startContinuousAnimation(filterInst, sliderParamIndex);
@@ -402,12 +410,18 @@ Gui.makeFilterInstance = function (
               folder.remove(oldButton);
             }
             animationButtonObj["⏸ Stop"] = toggleAnimation;
-            filterInst.animationButton = folder.add(animationButtonObj, "⏸ Stop");
+            filterInst.animationButton = folder.add(
+              animationButtonObj,
+              "⏸ Stop"
+            );
           }
         };
 
         animationButtonObj["▶ Animate"] = toggleAnimation;
-        filterInst.animationButton = folder.add(animationButtonObj, "▶ Animate");
+        filterInst.animationButton = folder.add(
+          animationButtonObj,
+          "▶ Animate"
+        );
       }
     }
 
@@ -426,7 +440,10 @@ Gui.makeFilterInstance = function (
         deleteButtonName = "Delete";
         deleteButtonFunc = () => {
           // Stop animation if this filter is being animated
-          if (filterInst.isAnimating && Main.continuousAnimationFilterInst === filterInst) {
+          if (
+            filterInst.isAnimating &&
+            Main.continuousAnimationFilterInst === filterInst
+          ) {
             Main.stopContinuousAnimation();
             filterInst.isAnimating = false;
           }

@@ -10,12 +10,16 @@
 assert(GuiConfig, "`guiSetup.js` requires `guiConfig.js`");
 
 GuiConfig.imageNames = [
+  "caféTerraceAtNight.png",
   "impressionSunrise.png",
+  "jacksonPollock.png",
   "laGrenouillére.png",
   "starryNight.png",
   "theScream.png",
   "theWaterLilyPond.png",
   "vincentVanGogh.png",
+  "waterLilies.png",
+  "womanWithAParasol.png",
 ];
 
 const sampleModeParam = {

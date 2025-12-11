@@ -8,25 +8,7 @@ assert(Assignment, "`page.js` requires `assignment.js`");
  */
 var Page = Page || {
   TITLE: null,
-
-  // WRITEUP_FILENAME: "js-student/writeup.yaml",
-  // // The cached contents of the writeup file.
-  // parsedWriteup: null,
 };
-
-// Page.readWriteupFile = function () {
-//   if (Page.parsedWriteup == null) {
-//     try {
-//       Page.parsedWriteup = {
-//         writeup: Parser.parseYamlFile(Page.WRITEUP_FILENAME),
-//       };
-//     } catch (error) {
-//       console.error(error);
-//       Page.parsedWriteup = { error };
-//     }
-//   }
-//   return Page.parsedWriteup;
-// };
 
 $(() => {
   const MDASH = " &mdash; ";
