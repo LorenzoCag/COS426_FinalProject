@@ -1066,8 +1066,34 @@ Filters.swirlFilter = function (image, radians, sampleMode) {
   // The rotation of the swirl should be in linear increase along the radial
   // axis up to `radians`.
   // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("swirlFilter is not implemented yet");
+  const w = image.width,
+    h = image.height;
+  const cx = (w - 1) / 2,
+    cy = (h - 1) / 2; // middle of image
+  const rMax = Math.hypot(cx, cy); // diagonal
+  const out = new Image426(w, h);
 
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const dx = x - cx,
+        dy = y - cy;
+      const r = Math.hypot(dx, dy);
+      const t = rMax > 0 ? Math.min(Math.max(r / rMax, 0), 1) : 0;
+      const ang = t * radians; // linear increase
+      const cosA = Math.cos(ang),
+        sinA = Math.sin(ang);
+
+      // inverse map
+      const sx = cx + dx * cosA + dy * -sinA;
+      const sy = cy + dx * sinA + dy * cosA;
+
+      out.setPixel(x, y, Filters.samplePixel(image, sx, sy, sampleMode));
+    }
+  }
+
+  // copy back
+  for (let yy = 0; yy < h; yy++)
+    for (let xx = 0; xx < w; xx++) image.setPixel(xx, yy, out.getPixel(xx, yy));
   return image;
   // --------------- STUDENT CODE END ----------------
 };
