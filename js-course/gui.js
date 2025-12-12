@@ -371,7 +371,8 @@ Gui.makeFilterInstance = function (
     if (
       (filterDef.name === "Contrast" ||
         filterDef.name === "Edge" ||
-        filterDef.name === "Custom Filter") &&
+        filterDef.name === "Custom Filter" ||
+        filterDef.name === "Breathing Clouds") &&
       !filterDef.isGlobal
     ) {
       // Find the slider parameter

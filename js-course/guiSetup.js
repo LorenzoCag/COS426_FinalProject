@@ -496,9 +496,24 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   },
 
   {
+    name: "Breathing Clouds",
+    folderName: "Misc",
+    canAnimate: false, // Uses continuous animation system instead
+    paramDefs: [
+      {
+        name: "Intensity",
+        type: GuiConfig.ParamDef.Type.SLIDER,
+        defaultVal: 0.7,
+        sliderRange: { min: 0.0, max: 1.0, step: 0.05 },
+        isFloat: true,
+      },
+    ],
+  },
+
+  {
     name: "Custom Filter",
     folderName: "Misc",
-    canAnimate: true,
+    canAnimate: false, // Uses continuous animation system instead
     paramDefs: [
       {
         name: "input value",

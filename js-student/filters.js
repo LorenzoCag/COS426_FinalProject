@@ -1310,6 +1310,95 @@ Filters.xDoGFilter = function (image, value) {
   // --------------- STUDENT CODE END ----------------
 };
 
+/**
+ * Breathing Clouds filter - makes clouds appear to "breathe" with vertical displacement
+ * and brightness pulse. Only affects cloud-like pixels in the upper sky region.
+ * @param {!Image426} image
+ * @param {number} value - Intensity of the breathing effect (0-1)
+ * @returns {!Image426} The result image.
+ */
+Filters.breathingCloudsFilter = function (image, value) {
+  const newImage = new Image426(image.width, image.height);
+  
+  // Get animation time if available
+  const time = (typeof Main !== 'undefined' && Main.animationTime != null) 
+    ? Main.animationTime 
+    : 0;
+  
+  // Cloud detection parameters
+  const skyRegionTop = 0.0; 
+  const skyRegionBottom = 0.6; // Upper 60%
+  const maxSaturation = 0.3; // Low saturation
+  const minLightness = 0.7; // High lightness
+  
+  // Breathing parameters
+  const maxVerticalDisplacement = value * 20; // Max displacement
+  const brightnessPulseAmount = value * 0.25; // brightness variation
+  
+  // calculate sky region
+  const skyStartY = Math.floor(image.height * skyRegionTop);
+  const skyEndY = Math.floor(image.height * skyRegionBottom);
+  
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const originalColor = image.getPixel(x, y);
+      
+      // check if in sky
+      const isInSkyRegion = y >= skyStartY && y <= skyEndY;
+      
+      if (isInSkyRegion) {
+        // Convert to HSL
+        const hsl = originalColor.toHsl();
+        const saturation = hsl.data[1];
+        const lightness = hsl.data[2];
+        
+        // Check if pixel is cloud-like
+        const isCloud = saturation < maxSaturation && lightness > minLightness;
+        
+        if (isCloud) {
+          // Calculate distance from top
+          const normalizedY = (y - skyStartY) / (skyEndY - skyStartY);
+          
+          // Displacement stronger at top
+          const topStrength = 1.0 - normalizedY; // 1.0 at top, 0.0 at horizon
+          
+          // breathing motion
+          const breathingPhase = Math.sin(time * 0.7) * 0.5 + 0.5; // 0 to 1
+          
+          // Vertical displacement
+          const verticalDisplacement = Math.sin(time * 0.7) * maxVerticalDisplacement * topStrength;
+          
+          // vert displacement
+          const sourceY = y + verticalDisplacement;
+          const sourceColor = Filters.samplePixel(image, x, sourceY, "bilinear");
+          
+          // APply brightnesss
+          const brightnessMultiplier = 1.0 + Math.sin(time * 0.7) * brightnessPulseAmount * topStrength;
+          
+          const finalColor = new PixelColor(
+            [
+              Math.min(1.0, sourceColor.data[0] * brightnessMultiplier),
+              Math.min(1.0, sourceColor.data[1] * brightnessMultiplier),
+              Math.min(1.0, sourceColor.data[2] * brightnessMultiplier)
+            ],
+            sourceColor.alpha
+          ).clamp();
+          
+          newImage.setPixel(x, y, finalColor);
+        } else {
+          // Not a cloud
+          newImage.setPixel(x, y, originalColor);
+        }
+      } else {
+        // Not in sky
+        newImage.setPixel(x, y, originalColor);
+      }
+    }
+  }
+  
+  return newImage;
+};
+
 Filters.customFilter = function (image, value) {
   // Animated ripple filter - ripples flow outward continuously
   // value (0-1) controls the intensity/amplitude of ripples (fixed when animating)
