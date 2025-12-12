@@ -1169,7 +1169,6 @@ Filters.compositeFilter = function (backgroundImg, foregroundImg) {
 /**
  * Morphs two images together using Beier92.
  * @param {!Image426} initialImg - The initial (before) image.
- * @param {!Image426} finalImg - The final (after) image.
  * @param {number} alpha - The morph time.
  * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
  * @param {number} radialCutoff - Measures the distance cutoff of the vector field for 
@@ -1179,9 +1178,8 @@ Filters.compositeFilter = function (backgroundImg, foregroundImg) {
  * @param {string} linesFile - A JSON file containing the corresponding flow vector
  * @returns {!Image426} The result image.
  */
-Filters.morphFilter = function (
+Filters.flowFilter = function (
   initialImg,
-  finalImg,
   alpha,
   sampleMode,
   linesFile
@@ -1196,15 +1194,29 @@ Filters.morphFilter = function (
    *     {vectors: !Array<{x0: number, y0: number, x1: number, y1: number}>}
    * }
    */
-  linesFile = "images/flow.json";
+  console.log(linesFile);
   const vectors = Parser.parseJsonFile(linesFile);
 
   // -------------- STUDENT CODE BEGIN ---------------
-  finalImg = initialImg.createCopy();
+  const finalImg = initialImg.createCopy();
 
-  const radialCutoff = 1;
-  const angularCutoff = Math.PI / 3;
+  const radialCutoff = 0.7;
+  const angularCutoff = Math.PI / 2.5;
+
+  const fadeTime = 0.7;
+  const fadeMax = 0.7;
+
+  alpha = 0.7 * alpha + 0.3;
+
+  const fadeAlpha = Math.max(0, fadeMax * ((alpha - fadeTime) / (1 - fadeTime)));
   
+  const blendColors = function(colorA, colorB) {
+    const a = blend(colorA.data[0], colorB.data[0], fadeAlpha);
+    const b = blend(colorA.data[1], colorB.data[1], fadeAlpha);
+    const c = blend(colorA.data[2], colorB.data[2], fadeAlpha);
+
+    return new PixelColor([a, b, c]);
+  }
 
   const dist = function(vector, x, y) {
     let dx = x - vector.x0;
@@ -1247,17 +1259,18 @@ Filters.morphFilter = function (
         const yF = y + disp.dy;
 
         if (finalImg.validCoords(xF, yF) && dispStr > 20) {
+          const colorA = initialImg.getPixel(x, y);
           const colorB = initialImg.getPixel(xF, yF);
-          finalImg.setPixel(xF, yF, colorB);
+          finalImg.setPixel(xF, yF, blendColors(colorA, colorB));
         }
 
       }
     }
-
-    mixingValue++;
   }
 
-  return finalImg;
+  initialImg.setImageData(finalImg.getImageData().data);
+
+  return initialImg;
   // --------------- STUDENT CODE END ----------------
 };
 

@@ -15,7 +15,7 @@ Object.assign(MorphLines, {
    * single line.
    * @type {{"initial"|"final": !Array<{x: number, y: number}>}}
    */
-  pointSet: { initial: [], final: [] },
+  pointSet: { vectors: []},
 
   /**
    * Maps canvas id to the color of the balls at the ends of the morph lines.
@@ -56,7 +56,7 @@ MorphLines.reDrawSingleFigure = function (canvasId) {
   let lineNum = 1;
   let prevX = null;
   let prevY = null;
-  for (const { x, y } of MorphLines.pointSet[canvasId]) {
+  for (const { x, y } of MorphLines.pointSet["vectors"]) {
     if (startLine) {
       // solid ball
       drawCircle(x, y, true);
@@ -89,10 +89,7 @@ MorphLines.reDrawSingleFigure = function (canvasId) {
 };
 
 MorphLines.reDrawFigures = function () {
-  for (const canvasId of ["initial", "final"]) {
-    if (MorphLines.imageSet[canvasId] == null) continue;
-    MorphLines.reDrawSingleFigure(canvasId);
-  }
+    MorphLines.reDrawSingleFigure("initial");
 };
 
 MorphLines.pushPointSets = function () {
@@ -114,34 +111,26 @@ MorphLines.popPointSets = function () {
 
 MorphLines.updatePointsJson = function () {
   // don't use dot notation to make clear these are canvas names
-  const initialPoints = MorphLines.pointSet["initial"];
-  const finalPoints = MorphLines.pointSet["final"];
+  const vectorPoints = MorphLines.pointSet["vectors"];
 
   const len = Math.floor(
-    Math.min(initialPoints.length, finalPoints.length) / 2
+    Math.min(vectorPoints.length, vectorPoints.length) / 2
   );
   if (len === 0) return;
 
-  const initial = [];
-  const final = [];
+  const vectors = [];
   for (let i = 0; i < len; i++) {
     const i1 = i * 2;
     const i2 = i1 + 1;
-    initial.push({
-      x0: initialPoints[i1].x,
-      y0: initialPoints[i1].y,
-      x1: initialPoints[i2].x,
-      y1: initialPoints[i2].y,
-    });
-    final.push({
-      x0: finalPoints[i1].x,
-      y0: finalPoints[i1].y,
-      x1: finalPoints[i2].x,
-      y1: finalPoints[i2].y,
+    vectors.push({
+      x0: vectorPoints[i1].x,
+      y0: vectorPoints[i1].y,
+      x1: vectorPoints[i2].x,
+      y1: vectorPoints[i2].y,
     });
   }
 
-  const pointsJson = JSON.stringify({ initial, final });
+  const pointsJson = JSON.stringify({ vectors });
   const data = "text/json;charset=utf-8," + encodeURIComponent(pointsJson);
   $("#download-link").attr("href", `data:${data}`);
 };
@@ -182,7 +171,7 @@ MorphLines.loadImage = function (canvasId, imageName) {
     $canvas.on("mousedown", (event) => {
       const point = calcPoint(event);
 
-      const canvasPoints = MorphLines.pointSet[canvasId];
+      const canvasPoints = MorphLines.pointSet["vectors"];
       const closePointIndex = canvasPoints.findIndex(({ x, y }) => {
         const dx = point.x - x;
         const dy = point.y - y;
@@ -204,7 +193,7 @@ MorphLines.loadImage = function (canvasId, imageName) {
     $canvas.on("mousemove", (event) => {
       if (currPointIndex === -1) return;
 
-      MorphLines.pointSet[canvasId][currPointIndex] = calcPoint(event);
+      MorphLines.pointSet["vectors"][currPointIndex] = calcPoint(event);
 
       MorphLines.reDrawFigures();
       MorphLines.updatePointsJson();
@@ -231,28 +220,18 @@ $(() => {
   }
 
   let initialFile = null;
-  let finalFile = null;
   let markerFile = null;
   for (const cmd of Parser.parseUrlCommands()) {
     const filename = cmd.argsStr;
     if (filename.length === 0) continue;
     if (cmd.name === "initial") {
       initialFile = filename;
-    } else if (cmd.name === "final") {
-      finalFile = filename;
     } else if (cmd.name === "marker") {
       markerFile = filename;
     }
   }
-  if (initialFile == null || finalFile == null) {
-    let msg = "Error in URL";
-    if (initialFile == null && finalFile == null) {
-      msg = "Error: Missing 'initial' and 'final' in URL";
-    } else if (initialFile == null) {
-      msg = "Error: Missing 'initial' in URL";
-    } else if (finalFile == null) {
-      msg = "Error: Missing 'final' in URL";
-    }
+  if (initialFile == null) {
+    msg = "Error: Missing 'initial' in URL";
     showError(msg);
     return;
   }
@@ -269,20 +248,18 @@ $(() => {
       showError(error);
     }
     if (marker != null) {
-      for (const canvasId of ["initial", "final"]) {
-        const points = marker[canvasId] ?? [];
-        for (const { x0, y0, x1, y1 } of points) {
-          MorphLines.pointSet[canvasId].push(
-            { x: x0, y: y0 },
-            { x: x1, y: y1 }
-          );
-        }
+      const points = marker["vectors"] ?? [];
+      for (const { x0, y0, x1, y1 } of points) {
+        MorphLines.pointSet["vectors"].push(
+          { x: x0, y: y0 },
+          { x: x1, y: y1 }
+        );
       }
     }
   }
 
   // edit the url to only have the valid args
-  const args = { initial: initialFile, final: finalFile };
+  const args = { initial: initialFile};
   if (markerFile != null) args.marker = markerFile;
   const argsStr = Object.entries(args)
     .map(([key, value]) => `${key}=${encodeURI(value)}`)
@@ -290,7 +267,6 @@ $(() => {
   history.pushState(null, "", `morphLines.html?${argsStr}`);
 
   MorphLines.loadImage("initial", decodeFilename(initialFile));
-  MorphLines.loadImage("final", decodeFilename(finalFile));
 
   MorphLines.pushPointSets();
 
