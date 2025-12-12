@@ -1406,8 +1406,8 @@ Filters.breathingCloudsFilter = function (image, value) {
 };
 
 Filters.customFilter = function (image, value) {
-  // Animated ripple filter that applies only to water and horizontally
-  // contiguous regions (e.g., bright sun reflections on the water).
+  // Animated ripple filter that applies only to water
+  
 
   const width = image.width;
   const height = image.height;
@@ -1427,7 +1427,7 @@ Filters.customFilter = function (image, value) {
       ? Main.animationTime
       : 0;
 
-  // --- Water detection (blue-ish pixels) ---
+  // water
   const waterRegionTop = Math.floor((2 * height) / 3); // only bottom ~55%
   const minSaturation = 0.2;
   const minLightness = 0.15;
@@ -1435,7 +1435,7 @@ Filters.customFilter = function (image, value) {
   const minHue = 0.5;  // cyan-ish
   const maxHue = 0.75; // blue-ish
 
-  // Mask of "true" blue water pixels
+  // true blue
   const waterMask = [];
   for (let y = 0; y < height; y++) {
     waterMask[y] = new Array(width).fill(false);
@@ -1461,9 +1461,7 @@ Filters.customFilter = function (image, value) {
     }
   }
 
-  // --- Horizontally contiguous expansion ---
-  // For each row: if there are any water pixels, mark ALL pixels between
-  // the leftmost and rightmost water pixel as ripple-affected.
+  // Horizontally contiguous expansion
   const rippleMask = [];
   for (let y = 0; y < height; y++) {
     rippleMask[y] = new Array(width).fill(false);
@@ -1481,7 +1479,7 @@ Filters.customFilter = function (image, value) {
       }
     }
 
-    // If we found at least one water pixel, fill the span [left, right]
+    // If we found at least one water pixel
     if (left !== -1) {
       for (let x = left; x <= right; x++) {
         rippleMask[y][x] = true;
@@ -1489,13 +1487,13 @@ Filters.customFilter = function (image, value) {
     }
   }
 
-  // --- Apply ripple only where rippleMask is true ---
+  // apply ripple where ripple mask is true
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const originalColor = image.getPixel(x, y);
 
       if (rippleMask[y][x]) {
-        // Same ripple computation as before
+        // Same ripple computation
         const dx = x - centerX;
         const dy = y - centerY;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1510,7 +1508,7 @@ Filters.customFilter = function (image, value) {
         const color = Filters.samplePixel(image, sourceX, sourceY, "point");
         newImage.setPixel(x, y, color);
       } else {
-        // Non-water (and not horizontally contiguous to water): unchanged
+        // Non-water
         newImage.setPixel(x, y, originalColor);
       }
     }
