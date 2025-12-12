@@ -20,6 +20,7 @@ GuiConfig.imageNames = [
   "vincentVanGogh.png",
   "waterLilies.png",
   "womanWithAParasol.png",
+  "flow.png",
 ];
 
 const sampleModeParam = {

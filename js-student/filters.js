@@ -1172,8 +1172,11 @@ Filters.compositeFilter = function (backgroundImg, foregroundImg) {
  * @param {!Image426} finalImg - The final (after) image.
  * @param {number} alpha - The morph time.
  * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
- * @param {string} linesFile - A JSON file containing the corresponding morph
- *     lines.
+ * @param {number} radialCutoff - Measures the distance cutoff of the vector field for 
+ * a single vector scaled by its length
+ * @param {number} angularCutoff Measures the cutoff of the vector field for a 
+ * single vector based on the angle made with that vector
+ * @param {string} linesFile - A JSON file containing the corresponding flow vector
  * @returns {!Image426} The result image.
  */
 Filters.morphFilter = function (
@@ -1190,21 +1193,71 @@ Filters.morphFilter = function (
    * first line of `lines.final`, and so on (i.e., the arrays have the same
    * length).
    * @type {
-   *     {initial: !Array<{x0: number, y0: number, x1: number, y1: number}>},
-   *     {final: !Array<{x0: number, y0: number, x1: number, y1: number}>}
+   *     {vectors: !Array<{x0: number, y0: number, x1: number, y1: number}>}
    * }
    */
-  const lines = Parser.parseJsonFile(linesFile);
-
-  // Recommended warp parameters
-  const WARP_A = 0.01;
-  const WARP_B = 2;
-  const WARP_P = 0.5;
+  linesFile = "images/flow.json";
+  const vectors = Parser.parseJsonFile(linesFile);
 
   // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("morphFilter is not implemented yet");
+  finalImg = initialImg.createCopy();
 
-  return initialImg;
+  const radialCutoff = 1;
+  const angularCutoff = Math.PI / 3;
+  
+
+  const dist = function(vector, x, y) {
+    let dx = x - vector.x0;
+    let dy = y - vector.y0;
+    return Math.hypot(dx, dy);
+  }
+
+  const angl = function(vector, x, y) {
+    let dxV = vector.x1 - vector.x0;
+    let dx = x - vector.x0;
+
+    let dyV = vector.y1 - vector.y0;
+    let dy = y - vector.y0;
+
+    let dot = (dxV * dx) + (dyV * dy);
+
+    return Math.acos(dot / (Math.hypot(dxV, dyV) * Math.hypot(dx, dy)));
+  }
+
+  const displacement = function(vector, x, y) {
+    const vecLen = Math.hypot(vector.x1 - vector.x0, vector.y1 - vector.y0);
+    const r = Math.max(0, 1 - (dist(vector, x, y) / (radialCutoff * vecLen)));
+    const theta = Math.max(0, 1 - (1 / angularCutoff * angl(vector, x, y)));
+
+    const a = r  * theta * alpha;
+    const dx = vector.x1 - vector.x0;
+    const dy = vector.y1 - vector.y0;
+
+    const v = {dx: dx * a, dy: dy * a};
+    return v;
+  } 
+
+  for (const vector of vectors.vectors) {
+    for (let y = 0; y < finalImg.height; y++) {
+      for (let x = 0; x < finalImg.width; x++) {
+
+        let disp = displacement(vector, x, y);
+        const dispStr = Math.hypot(disp.dx, disp.dy);
+        const xF = x + disp.dx;
+        const yF = y + disp.dy;
+
+        if (finalImg.validCoords(xF, yF) && dispStr > 20) {
+          const colorB = initialImg.getPixel(xF, yF);
+          finalImg.setPixel(xF, yF, colorB);
+        }
+
+      }
+    }
+
+    mixingValue++;
+  }
+
+  return finalImg;
   // --------------- STUDENT CODE END ----------------
 };
 
