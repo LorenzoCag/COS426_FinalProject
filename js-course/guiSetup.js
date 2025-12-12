@@ -11,6 +11,7 @@ assert(GuiConfig, "`guiSetup.js` requires `guiConfig.js`");
 
 GuiConfig.imageNames = [
   "caféTerraceAtNight.png",
+  "exampleWater.png",
   "impressionSunrise.png",
   "jacksonPollock.png",
   "laGrenouillére.png",
@@ -20,6 +21,7 @@ GuiConfig.imageNames = [
   "vincentVanGogh.png",
   "waterLilies.png",
   "womanWithAParasol.png",
+  "flow.png",
 ];
 
 const sampleModeParam = {
@@ -56,26 +58,21 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   },
 
   {
-    name: "Create Morph Lines",
+    name: "Create Flow Vectors",
     isFilter: false,
     applyFunc: function () {
-      // get the last two pushed images
-      const lastTwoImages = [];
+      // get the image
+      let img = "";
       for (const cached of Array.reversed(Main.applicationCache)) {
         if (cached.baseName == null) continue;
-        lastTwoImages.push(cached.baseName);
-        if (lastTwoImages.length >= 2) break;
+        img = cached.baseName;
+        break;
       }
-      if (lastTwoImages.length < 2) {
-        console.error("Requires two images in the stack");
-        return;
-      }
-      const [second, first] = lastTwoImages;
-      const args = { initial: first, final: second };
+      const args = { initial: img };
 
       // if the "Morph" filter is being used, load the given marker file
       const morphFilterInst = Gui.historyFilters.find(
-        (filterInst) => filterInst.filterDef.name === "Morph"
+        (filterInst) => filterInst.filterDef.name === "Flow"
       );
       if (morphFilterInst != null) {
         // find the lines file being used
@@ -294,9 +291,9 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
 
   // COMPOSITE OPERATIONS
   {
-    name: "Morph",
+    name: "Flow",
     folderName: "Composite",
-    numInputs: 2,
+    numInputs: 1,
     canAnimate: true,
     paramDefs: [
       {
@@ -349,10 +346,10 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   {
     name: "Ripple",
     folderName: "Misc",
-    canAnimate: false, // Uses continuous animation system
+    canAnimate: false, // Uses continuous animation system instead
     paramDefs: [
       {
-        name: "factor",
+        name: "value",
         type: GuiConfig.ParamDef.Type.SLIDER,
         defaultVal: 0.5,
         sliderRange: { min: 0.0, max: 1.0, step: 0.1 },

@@ -822,20 +822,16 @@ Filters.scaleFilter = function (image, ratio, sampleMode) {
 /**
  * Morphs two images together using Beier92.
  * @param {!Image426} initialImg - The initial (before) image.
- * @param {!Image426} finalImg - The final (after) image.
  * @param {number} alpha - The morph time.
  * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
- * @param {string} linesFile - A JSON file containing the corresponding morph
- *     lines.
+ * @param {number} radialCutoff - Measures the distance cutoff of the vector field for
+ * a single vector scaled by its length
+ * @param {number} angularCutoff Measures the cutoff of the vector field for a
+ * single vector based on the angle made with that vector
+ * @param {string} linesFile - A JSON file containing the corresponding flow vector
  * @returns {!Image426} The result image.
  */
-Filters.morphFilter = function (
-  initialImg,
-  finalImg,
-  alpha,
-  sampleMode,
-  linesFile
-) {
+Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
   /**
    * The corresponding morph lines between the initial and final images. Each
    * object in the `lines.initial` and `lines.final` arrays represents a line
@@ -843,19 +839,144 @@ Filters.morphFilter = function (
    * first line of `lines.final`, and so on (i.e., the arrays have the same
    * length).
    * @type {
-   *     {initial: !Array<{x0: number, y0: number, x1: number, y1: number}>},
-   *     {final: !Array<{x0: number, y0: number, x1: number, y1: number}>}
+   *     {vectors: !Array<{x0: number, y0: number, x1: number, y1: number}>}
    * }
    */
-  const lines = Parser.parseJsonFile(linesFile);
-
-  // Recommended warp parameters
-  const WARP_A = 0.01;
-  const WARP_B = 2;
-  const WARP_P = 0.5;
+  console.log(linesFile);
+  const vectors = Parser.parseJsonFile(linesFile);
 
   // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("morphFilter is not implemented yet");
+  const w = image.width,
+    h = image.height;
+  const cx = (w - 1) / 2,
+    cy = (h - 1) / 2; // middle of image
+  const rMax = Math.hypot(cx, cy); // diagonal
+  const out = new Image426(w, h);
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const dx = x - cx,
+        dy = y - cy;
+      const r = Math.hypot(dx, dy);
+      const t = rMax > 0 ? Math.min(Math.max(r / rMax, 0), 1) : 0;
+      const ang = t * radians; // linear increase
+      const cosA = Math.cos(ang),
+        sinA = Math.sin(ang);
+
+      // inverse map
+      const sx = cx + dx * cosA + dy * -sinA;
+      const sy = cy + dx * sinA + dy * cosA;
+
+      out.setPixel(x, y, Filters.samplePixel(image, sx, sy, sampleMode));
+    }
+  }
+
+  // copy back
+  for (let yy = 0; yy < h; yy++)
+    for (let xx = 0; xx < w; xx++) image.setPixel(xx, yy, out.getPixel(xx, yy));
+  return image;
+  // --------------- STUDENT CODE END ----------------
+};
+
+/**
+ * Morphs two images together using Beier92.
+ * @param {!Image426} initialImg - The initial (before) image.
+ * @param {number} alpha - The morph time.
+ * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
+ * @param {number} radialCutoff - Measures the distance cutoff of the vector field for
+ * a single vector scaled by its length
+ * @param {number} angularCutoff Measures the cutoff of the vector field for a
+ * single vector based on the angle made with that vector
+ * @param {string} linesFile - A JSON file containing the corresponding flow vector
+ * @returns {!Image426} The result image.
+ */
+Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
+  /**
+   * The corresponding morph lines between the initial and final images. Each
+   * object in the `lines.initial` and `lines.final` arrays represents a line
+   * from (x0, y0) to (x1, y1). The first line of `lines.initial` maps to the
+   * first line of `lines.final`, and so on (i.e., the arrays have the same
+   * length).
+   * @type {
+   *     {vectors: !Array<{x0: number, y0: number, x1: number, y1: number}>}
+   * }
+   */
+  console.log(linesFile);
+  const vectors = Parser.parseJsonFile(linesFile);
+
+  // -------------- STUDENT CODE BEGIN ---------------
+  const finalImg = initialImg.createCopy();
+
+  const radialCutoff = 0.7;
+  const angularCutoff = Math.PI / 2.5;
+
+  const fadeTime = 0.7;
+  const fadeMax = 0.7;
+
+  alpha = 0.7 * alpha + 0.3;
+
+  const fadeAlpha = Math.max(
+    0,
+    fadeMax * ((alpha - fadeTime) / (1 - fadeTime))
+  );
+
+  const blendColors = function (colorA, colorB) {
+    const a = blend(colorA.data[0], colorB.data[0], fadeAlpha);
+    const b = blend(colorA.data[1], colorB.data[1], fadeAlpha);
+    const c = blend(colorA.data[2], colorB.data[2], fadeAlpha);
+
+    return new PixelColor([a, b, c]);
+  };
+
+  const dist = function (vector, x, y) {
+    let dx = x - vector.x0;
+    let dy = y - vector.y0;
+    return Math.hypot(dx, dy);
+  };
+
+  const angl = function (vector, x, y) {
+    let dxV = vector.x1 - vector.x0;
+    let dx = x - vector.x0;
+
+    let dyV = vector.y1 - vector.y0;
+    let dy = y - vector.y0;
+
+    let dot = dxV * dx + dyV * dy;
+
+    return Math.acos(dot / (Math.hypot(dxV, dyV) * Math.hypot(dx, dy)));
+  };
+
+  const displacement = function (vector, x, y) {
+    const vecLen = Math.hypot(vector.x1 - vector.x0, vector.y1 - vector.y0);
+    const r = Math.max(0, 1 - dist(vector, x, y) / (radialCutoff * vecLen));
+    const theta = Math.max(0, 1 - (1 / angularCutoff) * angl(vector, x, y));
+
+    const a = r * theta * alpha;
+    const dx = vector.x1 - vector.x0;
+    const dy = vector.y1 - vector.y0;
+
+    const v = { dx: dx * a, dy: dy * a };
+    return v;
+  };
+
+  for (const vector of vectors.vectors) {
+    for (let y = 0; y < finalImg.height; y++) {
+      for (let x = 0; x < finalImg.width; x++) {
+        let disp = displacement(vector, x, y);
+        const dispStr = Math.hypot(disp.dx, disp.dy);
+        const xF = x + disp.dx;
+        const yF = y + disp.dy;
+
+        if (finalImg.validCoords(xF, yF) && dispStr > 20) {
+          const colorA = initialImg.getPixel(x, y);
+          const colorB = initialImg.getPixel(xF, yF);
+          finalImg.setPixel(xF, yF, blendColors(colorA, colorB));
+        }
+      }
+    }
+  }
+
+  initialImg.setImageData(finalImg.getImageData().data);
 
   return initialImg;
   // --------------- STUDENT CODE END ----------------
@@ -1040,44 +1161,111 @@ Filters.breatheFilter = function (image, intensity) {
   return newImage;
 };
 
-Filters.rippleFilter = function (image, factor) {
-  // Animated ripple filter - ripples flow outward continuously
-  // factor (0-1) controls the intensity/amplitude of ripples (fixed when animating)
-  // Uses Main.animationTime for continuous animation (set by animation system)
-  let newImage = new Image426(image.width, image.height);
-  const centerX = image.width / 2;
-  const centerY = image.height / 2;
+Filters.rippleFilter = function (image, value) {
+  // Animated ripple filter that applies only to water
+
+  const width = image.width;
+  const height = image.height;
+  const newImage = new Image426(width, height);
+
+  const centerX = width / 2;
+  const centerY = height / 2.5;
 
   // Ripple parameters
-  const amplitude = factor * 20; // Maximum displacement in pixels (controlled by user)
-  const frequency = 0.05; // How many ripples per pixel distance
-  const speed = 2.0; // How fast ripples move outward (increased for visible movement)
+  const amplitude = value * 10; // Max displacement in pixels
+  const frequency = 0.05; // Ripples per pixel distance
+  const speed = 2.0; // How fast ripples move outward
 
-  // Use global animation time if available (continuously increasing), otherwise use 0
-  let time =
+  // Global animation time
+  const time =
     typeof Main !== "undefined" && Main.animationTime != null
       ? Main.animationTime
       : 0;
 
-  for (let y = 0; y < image.height; y++) {
-    for (let x = 0; x < image.width; x++) {
-      // Calculate distance from center
-      const dx = x - centerX;
-      const dy = y - centerY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+  // water
+  const waterRegionTop = Math.floor((2 * height) / 3); // only bottom ~55%
+  const minSaturation = 0.2;
+  const minLightness = 0.15;
+  const maxLightness = 0.85;
+  const minHue = 0.5; // cyan-ish
+  const maxHue = 0.75; // blue-ish
 
-      // Calculate ripple displacement with time offset to make ripples flow outward
-      // Subtracting time from distance makes ripples appear to propagate outward continuously
-      const ripple = Math.sin(distance * frequency - time * speed) * amplitude;
+  // true blue
+  const waterMask = [];
+  for (let y = 0; y < height; y++) {
+    waterMask[y] = new Array(width).fill(false);
+  }
 
-      // Calculate source coordinates with ripple distortion
-      const angle = Math.atan2(dy, dx);
-      const sourceX = x + Math.cos(angle) * ripple;
-      const sourceY = y + Math.sin(angle) * ripple;
+  for (let y = waterRegionTop; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const hsl = image.getPixel(x, y).toHsl();
+      const hue = hsl.data[0];
+      const sat = hsl.data[1];
+      const light = hsl.data[2];
 
-      // Sample the pixel using point sampling (faster than bilinear)
-      const color = Filters.samplePixel(image, sourceX, sourceY, "point");
-      newImage.setPixel(x, y, color);
+      const isWater =
+        hue >= minHue &&
+        hue <= maxHue &&
+        sat >= minSaturation &&
+        light >= minLightness &&
+        light <= maxLightness;
+
+      if (isWater) {
+        waterMask[y][x] = true;
+      }
+    }
+  }
+
+  // Horizontally contiguous expansion
+  const rippleMask = [];
+  for (let y = 0; y < height; y++) {
+    rippleMask[y] = new Array(width).fill(false);
+  }
+
+  for (let y = waterRegionTop; y < height; y++) {
+    let left = -1;
+    let right = -1;
+
+    // Find first and last water pixels in this row
+    for (let x = 0; x < width; x++) {
+      if (waterMask[y][x]) {
+        if (left === -1) left = x;
+        right = x;
+      }
+    }
+
+    // If we found at least one water pixel
+    if (left !== -1) {
+      for (let x = left; x <= right; x++) {
+        rippleMask[y][x] = true;
+      }
+    }
+  }
+
+  // apply ripple where ripple mask is true
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const originalColor = image.getPixel(x, y);
+
+      if (rippleMask[y][x]) {
+        // Same ripple computation
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const ripple =
+          Math.sin(distance * frequency - time * speed) * amplitude;
+
+        const angle = Math.atan2(dy, dx);
+        const sourceX = x + Math.cos(angle) * ripple;
+        const sourceY = y + Math.sin(angle) * ripple;
+
+        const color = Filters.samplePixel(image, sourceX, sourceY, "point");
+        newImage.setPixel(x, y, color);
+      } else {
+        // Non-water
+        newImage.setPixel(x, y, originalColor);
+      }
     }
   }
 
