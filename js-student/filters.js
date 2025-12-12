@@ -1406,43 +1406,113 @@ Filters.breathingCloudsFilter = function (image, value) {
 };
 
 Filters.customFilter = function (image, value) {
-  // Animated ripple filter - ripples flow outward continuously
-  // value (0-1) controls the intensity/amplitude of ripples (fixed when animating)
-  // Uses Main.animationTime for continuous animation (set by animation system)
-  let newImage = new Image426(image.width, image.height);
-  const centerX = image.width / 2;
-  const centerY = image.height / 2;
+  // Animated ripple filter that applies only to water and horizontally
+  // contiguous regions (e.g., bright sun reflections on the water).
+
+  const width = image.width;
+  const height = image.height;
+  const newImage = new Image426(width, height);
+
+  const centerX = width / 2;
+  const centerY = height / 2.5;
 
   // Ripple parameters
-  const amplitude = value * 20; // Maximum displacement in pixels (controlled by user)
-  const frequency = 0.05; // How many ripples per pixel distance
-  const speed = 2.0; // How fast ripples move outward (increased for visible movement)
+  const amplitude = value * 10; // Max displacement in pixels
+  const frequency = 0.05;       // Ripples per pixel distance
+  const speed = 2.0;            // How fast ripples move outward
 
-  // Use global animation time if available (continuously increasing), otherwise use 0
-  let time =
+  // Global animation time
+  const time =
     typeof Main !== "undefined" && Main.animationTime != null
       ? Main.animationTime
       : 0;
 
-  for (let y = 0; y < image.height; y++) {
-    for (let x = 0; x < image.width; x++) {
-      // Calculate distance from center
-      const dx = x - centerX;
-      const dy = y - centerY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+  // --- Water detection (blue-ish pixels) ---
+  const waterRegionTop = Math.floor((2 * height) / 3); // only bottom ~55%
+  const minSaturation = 0.2;
+  const minLightness = 0.15;
+  const maxLightness = 0.85;
+  const minHue = 0.5;  // cyan-ish
+  const maxHue = 0.75; // blue-ish
 
-      // Calculate ripple displacement with time offset to make ripples flow outward
-      // Subtracting time from distance makes ripples appear to propagate outward continuously
-      const ripple = Math.sin(distance * frequency - time * speed) * amplitude;
+  // Mask of "true" blue water pixels
+  const waterMask = [];
+  for (let y = 0; y < height; y++) {
+    waterMask[y] = new Array(width).fill(false);
+  }
 
-      // Calculate source coordinates with ripple distortion
-      const angle = Math.atan2(dy, dx);
-      const sourceX = x + Math.cos(angle) * ripple;
-      const sourceY = y + Math.sin(angle) * ripple;
+  for (let y = waterRegionTop; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const hsl = image.getPixel(x, y).toHsl();
+      const hue = hsl.data[0];
+      const sat = hsl.data[1];
+      const light = hsl.data[2];
 
-      // Sample the pixel using point sampling (faster than bilinear)
-      const color = Filters.samplePixel(image, sourceX, sourceY, "point");
-      newImage.setPixel(x, y, color);
+      const isWater =
+        hue >= minHue &&
+        hue <= maxHue &&
+        sat >= minSaturation &&
+        light >= minLightness &&
+        light <= maxLightness;
+
+      if (isWater) {
+        waterMask[y][x] = true;
+      }
+    }
+  }
+
+  // --- Horizontally contiguous expansion ---
+  // For each row: if there are any water pixels, mark ALL pixels between
+  // the leftmost and rightmost water pixel as ripple-affected.
+  const rippleMask = [];
+  for (let y = 0; y < height; y++) {
+    rippleMask[y] = new Array(width).fill(false);
+  }
+
+  for (let y = waterRegionTop; y < height; y++) {
+    let left = -1;
+    let right = -1;
+
+    // Find first and last water pixels in this row
+    for (let x = 0; x < width; x++) {
+      if (waterMask[y][x]) {
+        if (left === -1) left = x;
+        right = x;
+      }
+    }
+
+    // If we found at least one water pixel, fill the span [left, right]
+    if (left !== -1) {
+      for (let x = left; x <= right; x++) {
+        rippleMask[y][x] = true;
+      }
+    }
+  }
+
+  // --- Apply ripple only where rippleMask is true ---
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const originalColor = image.getPixel(x, y);
+
+      if (rippleMask[y][x]) {
+        // Same ripple computation as before
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const ripple =
+          Math.sin(distance * frequency - time * speed) * amplitude;
+
+        const angle = Math.atan2(dy, dx);
+        const sourceX = x + Math.cos(angle) * ripple;
+        const sourceY = y + Math.sin(angle) * ripple;
+
+        const color = Filters.samplePixel(image, sourceX, sourceY, "point");
+        newImage.setPixel(x, y, color);
+      } else {
+        // Non-water (and not horizontally contiguous to water): unchanged
+        newImage.setPixel(x, y, originalColor);
+      }
     }
   }
 

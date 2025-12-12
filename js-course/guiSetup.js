@@ -11,6 +11,7 @@ assert(GuiConfig, "`guiSetup.js` requires `guiConfig.js`");
 
 GuiConfig.imageNames = [
   "caféTerraceAtNight.png",
+  "exampleWater.png",
   "impressionSunrise.png",
   "jacksonPollock.png",
   "laGrenouillére.png",
