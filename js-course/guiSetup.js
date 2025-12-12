@@ -498,7 +498,7 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   {
     name: "Breathing Clouds",
     folderName: "Misc",
-    canAnimate: false, // animates in imageMain.js
+    canAnimate: false, // Uses continuous animation system instead
     paramDefs: [
       {
         name: "Intensity",
@@ -513,7 +513,7 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   {
     name: "Custom Filter",
     folderName: "Misc",
-    canAnimate: false, // Uses continuous animation system
+    canAnimate: false, // Uses continuous animation system instead
     paramDefs: [
       {
         name: "input value",
