@@ -97,134 +97,6 @@ const mediate = function (values) {
  ******************************************************************************/
 
 /**
- * Fills the entire image with a single color.
- * @param {!Image426} image
- * @param {!PixelColor} color
- * @returns {!Image426} The given image (now modified).
- */
-Filters.fillFilter = function (image, color) {
-  // Already implemented in A0
-  image.fill(color);
-  return image;
-};
-
-/**
- * Draws a solid circle at each center in the given vertices string.
- * @param {!Image426} image
- * @param {number} radius - The circle radius in pixels.
- * @param {!PixelColor} color
- * @param {string} coordsString - A string in the format "x00y00x00y00..." where
- *     the "00"s represent any integer.
- * @returns {!Image426} The given image (now modified).
- */
-Filters.brushFilter = function (image, radius, color, coordsString) {
-  // `centers` is an array of (x,y) coordinates representing circle centers
-  const centers = stringToCoords(coordsString);
-
-  // Draw a filled circle centered at every location in `centers`.
-  // Radius and color are specified in function arguments.
-  // -------------- STUDENT CODE BEGIN ---------------
-  // Traverse `centers`
-  for (const center of centers) {
-    // Traverse a square region centered at `center`, with side length equal to
-    // twice the value of `radius`
-    for (let x = center.x - radius; x < center.x + radius; x++) {
-      for (let y = center.y - radius; y < center.y + radius; y++) {
-        // Calculate the distance from `center` to the pixxel with coordinates (`x`,`y`)
-        let distance_to_center =
-          ((center.x - x) ** 2 + (center.y - y) ** 2) ** 0.5;
-
-        // Set the color of the pixel with coordinates (`x`,`y`) to the value given for
-        // `color` if the distance between the center and the point is less than `radius`
-        if (distance_to_center < radius) {
-          image.setPixel(x, y, color);
-        }
-      }
-    }
-  }
-
-  return image;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
- * Draws a soft circle at each center in the given vertices string.
- *
- * The opacity should linearly decrease from `alphaAtCenter` at the center to 0
- * at the edge of each circle.
- * @param {!Image426} image
- * @param {number} radius - The circle radius in pixels.
- * @param {!PixelColor} color
- * @param {number} alphaAtCenter
- * @param {string} coordsString - A string in the format "x00y00x00y00..." where
- *     the "00"s represent any integer.
- * @returns {!Image426} The given image (now modified).
- */
-Filters.softBrushFilter = function (
-  image,
-  radius,
-  color,
-  alphaAtCenter,
-  coordsString
-) {
-  // `centers` is an array of (x,y) coordinates representing circle centers
-  const centers = stringToCoords(coordsString);
-
-  // Draw a filled circle centered at every location in `centers`.
-  // Radius and color are specified in function arguments.
-  // Opacity should be `alphaAtCenter` at the center of each circle, then
-  // decrease linearly along the radius, becoming 0 at the edge of the circle.
-  // -------------- STUDENT CODE BEGIN ---------------
-  // Traverse `centers`
-  for (const center of centers) {
-    // Traverse a square region centered at `center`, with a side length equal to twice
-    // the value of `radius`
-    for (let x = center.x - radius; x < center.x + radius; x++) {
-      for (let y = center.y - radius; y < center.y + radius; y++) {
-        // Calculate the distance from `center` to the pixel with coordinates (`x`,`y`)
-        let distance_to_center =
-          ((center.x - x) ** 2 + (center.y - y) ** 2) ** 0.5;
-
-        // Skip the rest of the code in the current iteration of the loop
-        // if the distance between `center` and (`x`,`y`) is greater than `radius`
-        if (distance_to_center >= radius) {
-          continue;
-        }
-
-        // Retrieve the opacity, foreground color, and background color
-        let opacity =
-          alphaAtCenter * Math.max(0, 1 - distance_to_center / radius);
-        let foregroundCopy = color.createCopy();
-        let backgroundColor = image.getPixel(x, y);
-
-        // Multiply the RGB values of the foreground color by `opacity`
-        foregroundCopy.data[0] *= opacity;
-        foregroundCopy.data[1] *= opacity;
-        foregroundCopy.data[2] *= opacity;
-
-        // Multiply the RGB values of the background color by `1 - opacity`
-        backgroundColor.data[0] *= 1 - opacity;
-        backgroundColor.data[1] *= 1 - opacity;
-        backgroundColor.data[2] *= 1 - opacity;
-
-        // Create the output color
-        let output_color = new PixelColor([
-          foregroundCopy.data[0] + backgroundColor.data[0],
-          foregroundCopy.data[1] + backgroundColor.data[1],
-          foregroundCopy.data[2] + backgroundColor.data[2],
-        ]);
-
-        // Set the color of the pixel with coordinates (`x`, `y`) to the value given for `output_color`
-        image.setPixel(x, y, output_color);
-      }
-    }
-  }
-
-  return image;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
  * Changes the brightness of an image.
  *
  * Blends the original colors with a black or white color according to the given
@@ -271,37 +143,20 @@ Filters.brightnessFilter = function (image, ratio) {
  * @returns {!Image426} The given image (now modified).
  */
 Filters.contrastFilter = function (image, ratio) {
-  let newImage = new Image426(image.width, image.height);
   const K = 1.0; // maximum pixel value
 
-  // Use global animation time if available (continuously increasing), otherwise use 0
-  let time =
-    typeof Main !== "undefined" && Main.animationTime != null
-      ? Main.animationTime
-      : 0;
-
+  // Formula:
+  //   value = (value - K/2) * (tan ((contrast + 1) * PI/4)) + K/2;
+  // Reference: https://en.wikipedia.org/wiki/Image_editing#Contrast_change_and_brightening
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
-      const hsl = color.toHsl();
-
-      if (hsl.data[0] >= 0.14 && hsl.data[0] <= 0.22) {
-        const contrasted = color.data.map((value) =>
-          contrast(value, K, ratio * Math.sin(time))
-        );
-        newImage.setPixel(
-          x,
-          y,
-          new PixelColor(contrasted, color.alpha).clamp()
-        );
-      } else {
-        newImage.setPixel(x, y, color);
-      }
+      const contrasted = color.data.map((value) => contrast(value, K, ratio));
+      image.setPixel(x, y, new PixelColor(contrasted, color.alpha).clamp());
     }
   }
 
-  return newImage;
-  // --------------- STUDENT CODE END ----------------
+  return image;
 };
 
 /**
@@ -315,7 +170,6 @@ Filters.gammaFilter = function (image, lnOfGamma) {
 
   // Formula:
   //   value = value ^ gamma
-  // -------------- STUDENT CODE BEGIN ---------------
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
@@ -327,7 +181,6 @@ Filters.gammaFilter = function (image, lnOfGamma) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -348,7 +201,6 @@ Filters.vignetteFilter = function (image, innerR, outerR) {
   // Ensure that `innerR` is at least 0.1 smaller than outerR
   innerR = clamp(innerR, 0, outerR - 0.1);
 
-  // -------------- STUDENT CODE BEGIN ---------------
   const imageCenter = [image.width / 2, image.height / 2];
   const halfDiagonal = Math.sqrt(image.width ** 2 + image.height ** 2) / 2;
 
@@ -374,7 +226,6 @@ Filters.vignetteFilter = function (image, innerR, outerR) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -387,8 +238,6 @@ Filters.vignetteFilter = function (image, innerR, outerR) {
  * @returns {!Image426} The given image (now modified).
  */
 Filters.histogramEqualizationFilter = function (image) {
-  // Hint: Build a normalized CDF of the L channel in the image.
-  // -------------- STUDENT CODE BEGIN ---------------
   const w = image.width,
     h = image.height;
   const N = w * h;
@@ -428,7 +277,6 @@ Filters.histogramEqualizationFilter = function (image) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -465,7 +313,6 @@ Filters.saturationFilter = function (image, ratio) {
   // Note: `ratio` in this assignment is equal to `1 - alpha`, where `alpha` is
   // the blending factor referenced in the Graphica Obscura method.
   // Reference: http://www.graficaobscura.com/interp/index.html
-  // -------------- STUDENT CODE BEGIN ---------------
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
@@ -478,7 +325,6 @@ Filters.saturationFilter = function (image, ratio) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -579,41 +425,6 @@ Filters.gaussianFilter = function (image, sigma) {
 
   return newImage;
   // --------------- STUDENT CODE END ----------------
-};
-
-/**
- * Convolves the image with the edge detection kernel.
- * @param {!Image426} image
- * @returns {!Image426} The result image.
- */
-Filters.edgeFilter = function (image, factor) {
-  let newImg = new Image426(image.width, image.height);
-
-  // Use global animation time if available (continuously increasing), otherwise use 0
-  let time =
-    typeof Main !== "undefined" && Main.animationTime != null
-      ? Main.animationTime
-      : 0;
-
-  for (let y = 0; y < image.height; y++) {
-    for (let x = 0; x < image.width; x++) {
-      const color = image.getPixel(x, y);
-      const hsl = color.toHsl();
-
-      if (hsl.data[0] >= 0.22 && hsl.data[0] <= 0.39) {
-        let output = image.getPixel(
-          x + Math.round(factor * Math.sin(time)),
-          y + Math.round(factor * Math.sin(time))
-        );
-
-        newImg.setPixel(x, y, output);
-      } else {
-        newImg.setPixel(x, y, color);
-      }
-    }
-  }
-
-  return newImg;
 };
 
 /**
@@ -980,45 +791,6 @@ Filters.samplePixel = function (image, x, y, mode) {
 };
 
 /**
- * Translates an image by (dx, dy) pixels.
- * @param {!Image426} image
- * @param {number} dx
- * @param {number} dy
- * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
- * @returns {!Image426} The result image.
- */
-Filters.translateFilter = function (image, dx, dy, sampleMode) {
-  // Note: Set pixels outside the image to RGBA(0,0,0,0)
-  // -------------- STUDENT CODE BEGIN ---------------
-  let transformedImage = new Image426(image.width, image.height);
-
-  for (let y = 0; y < transformedImage.height; y++) {
-    for (let x = 0; x < transformedImage.width; x++) {
-      if (
-        x - dx < 0 ||
-        x - dx >= image.width ||
-        y - dy < 0 ||
-        y - dy >= image.height
-      ) {
-        transformedImage.setPixel(x - dx, y - dy, new PixelColor([0, 0, 0], 0));
-      } else {
-        let outputPixel = Filters.samplePixel(
-          image,
-          x - dx,
-          y - dy,
-          sampleMode
-        );
-
-        transformedImage.setPixel(x, y, outputPixel);
-      }
-    }
-  }
-
-  return transformedImage;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
  * Scales an image in width and height by the given ratio.
  * @param {!Image426} image
  * @param {number} ratio
@@ -1045,123 +817,6 @@ Filters.scaleFilter = function (image, ratio, sampleMode) {
   }
 
   return transformedImage;
-};
-
-/**
- * Rotates an image by the given angle.
- * @param {!Image426} image
- * @param {number} radians - The rotation angle in radians. A positive angle
- *     means clockwise rotation.
- * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
- * @returns {!Image426} The result image.
- */
-Filters.rotateFilter = function (image, radians, sampleMode) {
-  // Note: Set pixels outside the image to RGBA(0,0,0,0)
-  // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("rotateFilter is not implemented yet");
-
-  return image;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
- * Warps an image around its center using a filter of your choice.
- * @param {!Image426} image
- * @param {number} radians - A rotation angle in radians. A positive angle means
- *     clockwise rotation.
- * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
- * @returns {!Image426} The result image.
- */
-Filters.swirlFilter = function (image, radians, sampleMode) {
-  // The rotation of the swirl should be in linear increase along the radial
-  // axis up to `radians`.
-  // -------------- STUDENT CODE BEGIN ---------------
-  const w = image.width,
-    h = image.height;
-  const cx = (w - 1) / 2,
-    cy = (h - 1) / 2; // middle of image
-  const rMax = Math.hypot(cx, cy); // diagonal
-  const out = new Image426(w, h);
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const dx = x - cx,
-        dy = y - cy;
-      const r = Math.hypot(dx, dy);
-      const t = rMax > 0 ? Math.min(Math.max(r / rMax, 0), 1) : 0;
-      const ang = t * radians; // linear increase
-      const cosA = Math.cos(ang),
-        sinA = Math.sin(ang);
-
-      // inverse map
-      const sx = cx + dx * cosA + dy * -sinA;
-      const sy = cy + dx * sinA + dy * cosA;
-
-      out.setPixel(x, y, Filters.samplePixel(image, sx, sy, sampleMode));
-    }
-  }
-
-  // copy back
-  for (let yy = 0; yy < h; yy++)
-    for (let xx = 0; xx < w; xx++) image.setPixel(xx, yy, out.getPixel(xx, yy));
-  return image;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
- * Sets the `alpha` channel of the background to be the luminance of the
- * foreground.
- *
- * The images are assumed to have the same dimensions.
- * @param {!Image426} backgroundImg
- * @param {!Image426} foregroundImg
- * @returns {!Image426} The resulting background image.
- */
-Filters.getAlphaFilter = function (backgroundImg, foregroundImg) {
-  for (let y = 0; y < backgroundImg.height; y++) {
-    for (let x = 0; x < backgroundImg.width; x++) {
-      const bgColor = backgroundImg.getPixel(x, y);
-      const fgColor = foregroundImg.getPixel(x, y);
-      // same components as background color, but with alpha equal to the
-      // foreground's luminance
-      const color = new PixelColor(bgColor.data, fgColor.luminance());
-      backgroundImg.setPixel(x, y, color);
-    }
-  }
-  return backgroundImg;
-};
-
-/**
- * Composites the foreground image over the background image using the alpha
- * channel of the foreground image to blend the two together.
- *
- * The images are assumed to have the same dimensions.
- * @param {!Image426} backgroundImg
- * @param {!Image426} foregroundImg
- * @returns {!Image426} The result image.
- */
-Filters.compositeFilter = function (backgroundImg, foregroundImg) {
-  // -------------- STUDENT CODE BEGIN ---------------
-  let resultantImg = new Image426(backgroundImg.width, backgroundImg.height);
-
-  for (let y = 0; y < foregroundImg.height; y++) {
-    for (let x = 0; x < foregroundImg.width; x++) {
-      let alpha = foregroundImg.getPixel(x, y).alpha;
-
-      let foregroundColor = foregroundImg.getPixel(x, y).multiplyBy(alpha);
-      let backgroundColor = backgroundImg.getPixel(x, y).multiplyBy(1 - alpha);
-
-      let outputColor = foregroundColor.add(backgroundColor);
-      outputColor.alpha =
-        foregroundColor.alpha +
-        (1 - foregroundColor.alpha) * backgroundColor.alpha;
-
-      resultantImg.setPixel(x, y, outputColor);
-    }
-  }
-
-  return resultantImg;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -1247,75 +902,55 @@ const addPaletteToImage = function (image, palette) {
 };
 
 /**
- * Extracts a "color palette" composed of `numColors` colors from the image that
- * represents its color scheme.
+ * Changes the contrast of pixels which are of yellow hue (in an image).
+ *
+ * Interpolates between a constant gray image (ratio = -1) with the average
+ * luminance and the original image (ratio = 0).
  * @param {!Image426} image
- * @param {number} numColors - The number of colors to create the palette from.
- *     In the range [1, 6].
- * @returns {!Image426} The result image.
+ * @param {number} brightness - A value in the range [-1, 1].
+ * @returns {!Image426} The given image (now modified).
  */
-Filters.paletteFilter = function (image, numColors) {
-  // Note: We recommend you to use the k-means clustering method (i.e., Lloyd's
-  // algorithm) with grid optimizations.
+Filters.sparkleFilter = function (image, brightness) {
+  let newImage = new Image426(image.width, image.height);
+  const K = 1.0; // maximum pixel value
 
-  // To create the output image, you may use the `addPaletteToImage()` helper
-  // function above.
-  // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("paletteFilter is not implemented yet");
+  // Use global animation time if available (continuously increasing), otherwise use 0
+  let time =
+    typeof Main !== "undefined" && Main.animationTime != null
+      ? Main.animationTime
+      : 0;
 
-  return addPaletteToImage(image, []);
-  // --------------- STUDENT CODE END ----------------
-};
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const color = image.getPixel(x, y);
+      const hsl = color.toHsl();
 
-/**
- * Applies a filter so that the image looks like a painting, using the approach
- * described by Haeberli.
- * @param {!Image426} image
- * @param {number} value - A factor by how much to "paint" the image.
- * @returns {!Image426} The result image.
- */
-Filters.paintFilter = function (image, value) {
-  // Reference: http://mrl.nyu.edu/publications/painterly98/hertzmann-siggraph98.pdf
-  // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("paintFilter is not implemented yet");
+      if (hsl.data[0] >= 0.14 && hsl.data[0] <= 0.22) {
+        const contrasted = color.data.map((value) =>
+          contrast(value, K, brightness * Math.sin(time))
+        );
+        newImage.setPixel(
+          x,
+          y,
+          new PixelColor(contrasted, color.alpha).clamp()
+        );
+      } else {
+        newImage.setPixel(x, y, color);
+      }
+    }
+  }
 
-  return image;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
- * Stylizes images into a pencil-drawing using the eXtended Difference-of-
- * Gaussians compendium described by Winnemoeller.
- * @param {!Image426} image
- * @param {number} value - A factor by how much to stylize the image.
- * @returns {!Image426} The result image.
- */
-Filters.xDoGFilter = function (image, value) {
-  // Reference: paper on eXtended Difference-of-Gaussians:
-  //   http://www.cs.princeton.edu/courses/archive/spring19/cos426/papers/Winnemoeller12.pdf
-  // Reference: an approach that develops a flow field based on a bilateral
-  // filter:
-  //   http://www.cs.princeton.edu/courses/archive/spring19/cos426/papers/Kang09.pdf
-
-  // Note: You can use the approach of Kang (second linked paper) to make the
-  // flow field (instead of the one in the XDoG paper) because it is based on
-  // the bilateral filter, which you have already implemented.
-
-  // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("xDoGFilter is not implemented yet");
-
-  return image;
-  // --------------- STUDENT CODE END ----------------
+  return newImage;
 };
 
 /**
  * Breathing Clouds filter - makes clouds appear to "breathe" with vertical displacement
  * and brightness pulse. Only affects cloud-like pixels in the upper sky region.
  * @param {!Image426} image
- * @param {number} value - Intensity of the breathing effect (0-1)
+ * @param {number} intensity - Intensity of the breathing effect (0-1)
  * @returns {!Image426} The result image.
  */
-Filters.breathingCloudsFilter = function (image, value) {
+Filters.breatheFilter = function (image, intensity) {
   const newImage = new Image426(image.width, image.height);
 
   // Get animation time if available
@@ -1331,8 +966,8 @@ Filters.breathingCloudsFilter = function (image, value) {
   const minLightness = 0.7; // High lightness
 
   // Breathing parameters
-  const maxVerticalDisplacement = value * 20; // Max displacement
-  const brightnessPulseAmount = value * 0.25; // brightness variation
+  const maxVerticalDisplacement = intensity * 20; // Max displacement
+  const brightnessPulseAmount = intensity * 0.25; // brightness variation
 
   // calculate sky region
   const skyStartY = Math.floor(image.height * skyRegionTop);
@@ -1405,16 +1040,16 @@ Filters.breathingCloudsFilter = function (image, value) {
   return newImage;
 };
 
-Filters.customFilter = function (image, value) {
+Filters.rippleFilter = function (image, factor) {
   // Animated ripple filter - ripples flow outward continuously
-  // value (0-1) controls the intensity/amplitude of ripples (fixed when animating)
+  // factor (0-1) controls the intensity/amplitude of ripples (fixed when animating)
   // Uses Main.animationTime for continuous animation (set by animation system)
   let newImage = new Image426(image.width, image.height);
   const centerX = image.width / 2;
   const centerY = image.height / 2;
 
   // Ripple parameters
-  const amplitude = value * 20; // Maximum displacement in pixels (controlled by user)
+  const amplitude = factor * 20; // Maximum displacement in pixels (controlled by user)
   const frequency = 0.05; // How many ripples per pixel distance
   const speed = 2.0; // How fast ripples move outward (increased for visible movement)
 
@@ -1447,4 +1082,42 @@ Filters.customFilter = function (image, value) {
   }
 
   return newImage;
+};
+
+/**
+ * Translates pixels that are of green hue sinusoidally and diagonally across
+ * the image, making objects like leaves and trees appear as though they are
+ * blowing in the wind.
+ * @param {!Image426} image
+ * @param {number} factor
+ * @returns {!Image426} The result image.
+ */
+Filters.windFilter = function (image, factor) {
+  let newImg = new Image426(image.width, image.height);
+
+  // Use global animation time if available (continuously increasing), otherwise use 0
+  let time =
+    typeof Main !== "undefined" && Main.animationTime != null
+      ? Main.animationTime
+      : 0;
+
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const color = image.getPixel(x, y);
+      const hsl = color.toHsl();
+
+      if (hsl.data[0] >= 0.22 && hsl.data[0] <= 0.39) {
+        let output = image.getPixel(
+          x + Math.round(factor * Math.sin(time)),
+          y + Math.round(factor * Math.sin(time))
+        );
+
+        newImg.setPixel(x, y, output);
+      } else {
+        newImg.setPixel(x, y, color);
+      }
+    }
+  }
+
+  return newImg;
 };

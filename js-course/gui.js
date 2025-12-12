@@ -369,10 +369,10 @@ Gui.makeFilterInstance = function (
   if (!Gui.hidden) {
     // Add continuous animation buttons for appropriate filters
     if (
-      (filterDef.name === "Contrast" ||
-        filterDef.name === "Edge" ||
-        filterDef.name === "Custom Filter" ||
-        filterDef.name === "Breathing Clouds") &&
+      (filterDef.name === "Sparkle" ||
+        filterDef.name === "Breathe" ||
+        filterDef.name === "Ripple" ||
+        filterDef.name === "Wind") &&
       !filterDef.isGlobal
     ) {
       // Find the slider parameter

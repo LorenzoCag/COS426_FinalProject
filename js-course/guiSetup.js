@@ -96,72 +96,6 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
     },
   },
 
-  // SET PIXEL OPERATIONS
-  {
-    name: "Fill",
-    folderName: "Set Pixels",
-    paramDefs: [
-      {
-        name: "color",
-        type: GuiConfig.ParamDef.Type.COLOR,
-        defaultVal: [0, 0, 0],
-      },
-    ],
-  },
-  {
-    name: "Brush",
-    folderName: "Set Pixels",
-    paramDefs: [
-      {
-        name: "radius",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 10,
-        sliderRange: { min: 1, max: 100 },
-      },
-      {
-        name: "color",
-        type: GuiConfig.ParamDef.Type.COLOR,
-        mustBeOpaque: true,
-        defaultVal: [255, 255, 255],
-      },
-      {
-        name: "coords",
-        type: GuiConfig.ParamDef.Type.STRING,
-        defaultVal: "",
-      },
-    ],
-  },
-  {
-    name: "Soft Brush",
-    folderName: "Set Pixels",
-    paramDefs: [
-      {
-        name: "radius",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 10,
-        sliderRange: { min: 1, max: 100 },
-      },
-      {
-        name: "color",
-        type: GuiConfig.ParamDef.Type.COLOR,
-        mustBeOpaque: true,
-        defaultVal: [255, 255, 255],
-      },
-      {
-        name: "alpha at center",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 1.0,
-        sliderRange: { min: 0.0, max: 1.0, step: 0.05 },
-        isFloat: true,
-      },
-      {
-        name: "coords",
-        type: GuiConfig.ParamDef.Type.STRING,
-        defaultVal: "",
-      },
-    ],
-  },
-
   // LUMINANCE OPERATIONS
   {
     name: "Brightness",
@@ -289,19 +223,6 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
     paramDefs: [],
   },
   {
-    name: "Edge",
-    folderName: "Filters",
-    canAnimate: true,
-    paramDefs: [
-      {
-        name: "factor",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 1,
-        sliderRange: { min: 1, max: 5 },
-      },
-    ],
-  },
-  {
     name: "Median",
     folderName: "Filters",
     paramDefs: [
@@ -370,68 +291,8 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
       sampleModeParam,
     ],
   },
-  {
-    name: "Translate",
-    folderName: "Resampling",
-    paramDefs: [
-      {
-        name: "x",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0,
-        sliderRange: { min: -600, max: 600 },
-      },
-      {
-        name: "y",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0,
-        sliderRange: { min: -600, max: 600 },
-      },
-      sampleModeParam,
-    ],
-  },
-  {
-    name: "Rotate",
-    folderName: "Resampling",
-    paramDefs: [
-      {
-        name: "radians",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 1.0,
-        sliderRange: { min: 0.0, max: Math.PI * 2, step: Math.PI / 12 },
-        isFloat: true,
-      },
-      sampleModeParam,
-    ],
-  },
-  {
-    name: "Swirl",
-    folderName: "Resampling",
-    canAnimate: true,
-    paramDefs: [
-      {
-        name: "radians",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 1.0,
-        sliderRange: { min: 0.0, max: Math.PI * 2, step: Math.PI / 12 },
-        isFloat: true,
-      },
-      sampleModeParam,
-    ],
-  },
 
   // COMPOSITE OPERATIONS
-  {
-    name: "Get Alpha",
-    folderName: "Composite",
-    numInputs: 2,
-    paramDefs: [],
-  },
-  {
-    name: "Composite",
-    folderName: "Composite",
-    numInputs: 2,
-    paramDefs: [],
-  },
   {
     name: "Morph",
     folderName: "Composite",
@@ -456,52 +317,27 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
 
   // MISC OPERATIONS
   {
-    name: "Palette",
+    name: "Sparkle",
     folderName: "Misc",
+    canAnimate: false, // Uses continuous animation system
     paramDefs: [
       {
-        name: "num colors",
+        name: "brightness",
         type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 3,
-        sliderRange: { min: 1, max: 6 },
-      },
-    ],
-  },
-  {
-    name: "Paint",
-    folderName: "Misc",
-    paramDefs: [
-      {
-        name: "input value",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0.5,
-        sliderRange: { min: 0.0, max: 1.0, step: 0.05 },
-        isFloat: true,
-      },
-    ],
-  },
-  {
-    name: "XDoG",
-    folderName: "Misc",
-    funcName: "xDoGFilter",
-    paramDefs: [
-      {
-        name: "input value",
-        type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0.5,
-        sliderRange: { min: 0.0, max: 1.0, step: 0.05 },
+        defaultVal: 0.0,
+        sliderRange: { min: -1.0, max: 1.0, step: 0.1 },
         isFloat: true,
       },
     ],
   },
 
   {
-    name: "Breathing Clouds",
+    name: "Breathe",
     folderName: "Misc",
-    canAnimate: false, // animates in imageMain.js
+    canAnimate: false, // Uses continuous animation system
     paramDefs: [
       {
-        name: "Intensity",
+        name: "intensity",
         type: GuiConfig.ParamDef.Type.SLIDER,
         defaultVal: 0.7,
         sliderRange: { min: 0.0, max: 1.0, step: 0.05 },
@@ -511,16 +347,30 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   },
 
   {
-    name: "Custom Filter",
+    name: "Ripple",
     folderName: "Misc",
     canAnimate: false, // Uses continuous animation system
     paramDefs: [
       {
-        name: "input value",
+        name: "factor",
         type: GuiConfig.ParamDef.Type.SLIDER,
         defaultVal: 0.5,
         sliderRange: { min: 0.0, max: 1.0, step: 0.1 },
         isFloat: true,
+      },
+    ],
+  },
+
+  {
+    name: "Wind",
+    folderName: "Misc",
+    canAnimate: false, // Uses continuous animation system
+    paramDefs: [
+      {
+        name: "factor",
+        type: GuiConfig.ParamDef.Type.SLIDER,
+        defaultVal: 1,
+        sliderRange: { min: 1, max: 5 },
       },
     ],
   },
