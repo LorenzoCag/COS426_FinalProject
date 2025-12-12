@@ -16,6 +16,7 @@ GuiConfig.imageNames = [
   "jacksonPollock.png",
   "laGrenouillére.png",
   "starryNight.png",
+  "starryNightOverTheRhône.png",
   "theScream.png",
   "theWaterLilyPond.png",
   "vincentVanGogh.png",
@@ -28,6 +29,18 @@ const sampleModeParam = {
   name: "sample mode",
   type: GuiConfig.ParamDef.Type.DROPDOWN,
   dropdownOptions: ["point", "bilinear", "gaussian"],
+};
+
+const directionParam = {
+  name: "direction",
+  type: GuiConfig.ParamDef.Type.DROPDOWN,
+  dropdownOptions: ["left", "right"],
+};
+
+const hueParam = {
+  name: "hue",
+  type: GuiConfig.ParamDef.Type.DROPDOWN,
+  dropdownOptions: ["red", "orange", "yellow"],
 };
 
 /**
@@ -194,11 +207,6 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
       },
     ],
   },
-  {
-    name: "Histogram Match",
-    folderName: "Color",
-    numInputs: 2,
-  },
 
   // FILTER OPERATIONS
   {
@@ -299,7 +307,7 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
       {
         name: "alpha",
         type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0.5,
+        defaultVal: 0.0,
         sliderRange: { min: 0.0, max: 1.0, step: 0.1 },
         isFloat: true,
       },
@@ -318,11 +326,12 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
     folderName: "Misc",
     canAnimate: false, // Uses continuous animation system
     paramDefs: [
+      hueParam,
       {
         name: "brightness",
         type: GuiConfig.ParamDef.Type.SLIDER,
         defaultVal: 0.0,
-        sliderRange: { min: -1.0, max: 1.0, step: 0.1 },
+        sliderRange: { min: -0.5, max: 0.5, step: 0.1 },
         isFloat: true,
       },
     ],
@@ -336,8 +345,8 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
       {
         name: "intensity",
         type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0.7,
-        sliderRange: { min: 0.0, max: 1.0, step: 0.05 },
+        defaultVal: 0.0,
+        sliderRange: { min: 0.0, max: 1.0, step: 0.1 },
         isFloat: true,
       },
     ],
@@ -346,14 +355,25 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
   {
     name: "Ripple",
     folderName: "Misc",
-    canAnimate: false, // Uses continuous animation system instead
+    canAnimate: false, // Uses continuous animation system
     paramDefs: [
       {
-        name: "value",
+        name: "amplitude",
         type: GuiConfig.ParamDef.Type.SLIDER,
-        defaultVal: 0.5,
-        sliderRange: { min: 0.0, max: 1.0, step: 0.1 },
-        isFloat: true,
+        defaultVal: 0,
+        sliderRange: { min: 0, max: 10 },
+      },
+      {
+        name: "frequency",
+        type: GuiConfig.ParamDef.Type.SLIDER,
+        defaultVal: 0.0,
+        sliderRange: { min: 0, max: 0.5, step: 0.05 },
+      },
+      {
+        name: "speed",
+        type: GuiConfig.ParamDef.Type.SLIDER,
+        defaultVal: 1,
+        sliderRange: { min: 1, max: 5 },
       },
     ],
   },
@@ -364,11 +384,12 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
     canAnimate: false, // Uses continuous animation system
     paramDefs: [
       {
-        name: "factor",
+        name: "speed",
         type: GuiConfig.ParamDef.Type.SLIDER,
         defaultVal: 1,
         sliderRange: { min: 1, max: 5 },
       },
+      directionParam,
     ],
   },
 ]);

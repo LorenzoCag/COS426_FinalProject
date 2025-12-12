@@ -338,7 +338,6 @@ Filters.whiteBalanceFilter = function (image, white) {
   // the LMS coordinates of the white point color, and convert back to RGB.
   // Note that `Image426.setPixel()` will accept a `PixelColor` in any
   // colorspace and automatically convert it to RGB.
-  // -------------- STUDENT CODE BEGIN ---------------
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
@@ -350,24 +349,6 @@ Filters.whiteBalanceFilter = function (image, white) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
-};
-
-/**
- * Adjusts the color and contrast of the input image by matching its lightness
- * histogram to that of some reference image.
- * @param {!Image426} image
- * @param {!Image426} refImg - The reference image to match lightness histograms
- *     to.
- * @returns {!Image426} The given image (now modified).
- */
-Filters.histogramMatchFilter = function (image, refImg) {
-  // Hint: Take the CDF of the L channel in one image and map it to another.
-  // -------------- STUDENT CODE BEGIN ---------------
-  Gui.alertOnce("histogramMatchFilter is not implemented yet");
-
-  return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -381,8 +362,6 @@ Filters.gaussianFilter = function (image, sigma) {
   //   2 * winR + 1
   const winR = Math.max(1, Math.ceil(sigma * 3));
 
-  // Note: This should be implemented as a separable Gaussian filter.
-  // -------------- STUDENT CODE BEGIN ---------------
   let newImage = new Image426(image.width, image.height);
 
   for (let y = 0; y < image.height; y++) {
@@ -424,7 +403,6 @@ Filters.gaussianFilter = function (image, sigma) {
   }
 
   return newImage;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -434,7 +412,6 @@ Filters.gaussianFilter = function (image, sigma) {
  * @returns {!Image426} The result image.
  */
 Filters.sharpenFilter = function (image) {
-  // -------------- STUDENT CODE BEGIN ---------------
   let newImg = new Image426(image.width, image.height);
 
   const kernel = [
@@ -470,7 +447,6 @@ Filters.sharpenFilter = function (image) {
   }
 
   return newImg;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -483,8 +459,6 @@ Filters.sharpenFilter = function (image) {
 Filters.medianFilter = function (image, winR) {
   // A pixel's neighborhood is a square window of side length `2 * winR + 1`
   // that is centered at the pixel (`winR` on each side).
-  // Note: You might want to apply this separately to each channel.
-  // -------------- STUDENT CODE BEGIN ---------------
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       let pixels = [];
@@ -507,7 +481,6 @@ Filters.medianFilter = function (image, winR) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -524,9 +497,6 @@ Filters.bilateralFilter = function (image, sigmaR, sigmaS) {
   const winR = Math.max(1, Math.ceil(sigmaS));
   sigmaR *= Math.sqrt(2) * winR;
 
-  // Note: We recommend that you use the L2 distance in integral (i.e., [0,255])
-  // RGB color space for color difference.
-  // -------------- STUDENT CODE BEGIN ---------------
   let newImage = new Image426(image.width, image.height);
 
   for (let j = 0; j < image.height; j++) {
@@ -567,7 +537,6 @@ Filters.bilateralFilter = function (image, sigmaR, sigmaS) {
   }
 
   return newImage;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -600,7 +569,6 @@ Filters.randomFilter = function (image) {
   image = Filters.grayscaleFilter(image);
 
   // Apply random noise and quantize the image.
-  // -------------- STUDENT CODE BEGIN ---------------
   for (let x = 0; x < image.width; x++) {
     for (let y = 0; y < image.width; y++) {
       const color = image.getPixel(x, y);
@@ -611,7 +579,6 @@ Filters.randomFilter = function (image) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -625,7 +592,6 @@ Filters.floydFilter = function (image) {
 
   // Quantize each pixel and diffuse the quantization error to the neighboring
   // pixels.
-  // -------------- STUDENT CODE BEGIN ---------------
   for (let y = 0; y < image.height; y++) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
@@ -664,7 +630,6 @@ Filters.floydFilter = function (image) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -676,9 +641,6 @@ Filters.orderedFilter = function (image) {
   // convert to gray scale
   image = Filters.grayscaleFilter(image);
 
-  // Note: We recommend using the pattern from the examples page and precept
-  // slides.
-  // -------------- STUDENT CODE BEGIN ---------------
   let D = [
     [15, 7, 13, 5],
     [3, 11, 1, 9],
@@ -720,7 +682,6 @@ Filters.orderedFilter = function (image) {
   }
 
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -845,7 +806,6 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
   console.log(linesFile);
   const vectors = Parser.parseJsonFile(linesFile);
 
-  // -------------- STUDENT CODE BEGIN ---------------
   const w = image.width,
     h = image.height;
   const cx = (w - 1) / 2,
@@ -875,7 +835,6 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
   for (let yy = 0; yy < h; yy++)
     for (let xx = 0; xx < w; xx++) image.setPixel(xx, yy, out.getPixel(xx, yy));
   return image;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -904,7 +863,6 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
   console.log(linesFile);
   const vectors = Parser.parseJsonFile(linesFile);
 
-  // -------------- STUDENT CODE BEGIN ---------------
   const finalImg = initialImg.createCopy();
 
   const radialCutoff = 0.7;
@@ -979,7 +937,6 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
   initialImg.setImageData(finalImg.getImageData().data);
 
   return initialImg;
-  // --------------- STUDENT CODE END ----------------
 };
 
 /**
@@ -1023,17 +980,18 @@ const addPaletteToImage = function (image, palette) {
 };
 
 /**
- * Changes the contrast of pixels which are of yellow hue (in an image).
+ * Continuously changes the contrast of pixels which are of a particular hue (in an image).
  *
  * Interpolates between a constant gray image (ratio = -1) with the average
  * luminance and the original image (ratio = 0).
  * @param {!Image426} image
- * @param {number} brightness - A value in the range [-1, 1].
+ * @param {!Image426} hue The hue of the pixels to be contrasted (red, orange, or yellow).
+ * @param {number} brightness - A value in the range [-0.5, 0.5].
  * @returns {!Image426} The given image (now modified).
  */
-Filters.sparkleFilter = function (image, brightness) {
+Filters.sparkleFilter = function (image, hue, brightness) {
   let newImage = new Image426(image.width, image.height);
-  const K = 1.0; // maximum pixel value
+  const K = 1.0; // Maximum pixel value
 
   // Use global animation time if available (continuously increasing), otherwise use 0
   let time =
@@ -1045,8 +1003,19 @@ Filters.sparkleFilter = function (image, brightness) {
     for (let x = 0; x < image.width; x++) {
       const color = image.getPixel(x, y);
       const hsl = color.toHsl();
-
-      if (hsl.data[0] >= 0.14 && hsl.data[0] <= 0.22) {
+      let range;
+      switch (hue) {
+        case "red":
+          range = [0 / 360, 20 / 360];
+          break;
+        case "orange":
+          range = [20 / 360, 40 / 360];
+          break;
+        default:
+          range = [50 / 360, 80 / 360];
+          break;
+      }
+      if (hsl.data[0] >= range[0] && hsl.data[0] <= range[1]) {
         const contrasted = color.data.map((value) =>
           contrast(value, K, brightness * Math.sin(time))
         );
@@ -1065,10 +1034,11 @@ Filters.sparkleFilter = function (image, brightness) {
 };
 
 /**
- * Breathing Clouds filter - makes clouds appear to "breathe" with vertical displacement
- * and brightness pulse. Only affects cloud-like pixels in the upper sky region.
+ * Makes clouds appear to "breathe" with vertical displacement
+ * and brightness pulse.
+ * Only affects cloud-like pixels in the upper sky region.
  * @param {!Image426} image
- * @param {number} intensity - Intensity of the breathing effect (0-1)
+ * @param {number} intensity Intensity of the breathing effect (0-1).
  * @returns {!Image426} The result image.
  */
 Filters.breatheFilter = function (image, intensity) {
@@ -1088,9 +1058,9 @@ Filters.breatheFilter = function (image, intensity) {
 
   // Breathing parameters
   const maxVerticalDisplacement = intensity * 20; // Max displacement
-  const brightnessPulseAmount = intensity * 0.25; // brightness variation
+  const brightnessPulseAmount = intensity * 0.25; // Brightness variation
 
-  // calculate sky region
+  // Calculate sky region
   const skyStartY = Math.floor(image.height * skyRegionTop);
   const skyEndY = Math.floor(image.height * skyRegionBottom);
 
@@ -1098,7 +1068,7 @@ Filters.breatheFilter = function (image, intensity) {
     for (let x = 0; x < image.width; x++) {
       const originalColor = image.getPixel(x, y);
 
-      // check if in sky
+      // Check if in sky
       const isInSkyRegion = y >= skyStartY && y <= skyEndY;
 
       if (isInSkyRegion) {
@@ -1117,14 +1087,14 @@ Filters.breatheFilter = function (image, intensity) {
           // Displacement stronger at top
           const topStrength = 1.0 - normalizedY; // 1.0 at top, 0.0 at horizon
 
-          // breathing motion
+          // Breathing motion
           // const breathingPhase = Math.sin(time * 0.7) * 0.5 + 0.5; // 0 to 1
 
           // Vertical displacement
           const verticalDisplacement =
             time * 0.7 * maxVerticalDisplacement * topStrength;
 
-          // vert displacement
+          // Vertical displacement
           const sourceY = y + verticalDisplacement;
           const sourceColor = Filters.samplePixel(
             image,
@@ -1133,7 +1103,7 @@ Filters.breatheFilter = function (image, intensity) {
             "bilinear"
           );
 
-          // APply brightnesss
+          // Apply brightnesss
           const brightnessMultiplier =
             1.0 + time * 0.7 * brightnessPulseAmount * topStrength;
 
@@ -1161,9 +1131,15 @@ Filters.breatheFilter = function (image, intensity) {
   return newImage;
 };
 
-Filters.rippleFilter = function (image, value) {
-  // Animated ripple filter that applies only to water
-
+/**
+ * Make water-like pixels in the bottom half of an image appear to ripple.
+ * @param {!Image426} image
+ * @param {number} amplitude Amplitude of the water (0-10).
+ * @param {number} frequency Ripples per pixel distance (0-1).
+ * @param {number} speed How fast ripples move outward (1-5).
+ * @returns {!Image426} The result image.
+ */
+Filters.rippleFilter = function (image, amplitude, frequency, speed) {
   const width = image.width;
   const height = image.height;
   const newImage = new Image426(width, height);
@@ -1171,26 +1147,21 @@ Filters.rippleFilter = function (image, value) {
   const centerX = width / 2;
   const centerY = height / 2.5;
 
-  // Ripple parameters
-  const amplitude = value * 10; // Max displacement in pixels
-  const frequency = 0.05; // Ripples per pixel distance
-  const speed = 2.0; // How fast ripples move outward
-
   // Global animation time
   const time =
     typeof Main !== "undefined" && Main.animationTime != null
       ? Main.animationTime
       : 0;
 
-  // water
-  const waterRegionTop = Math.floor((2 * height) / 3); // only bottom ~55%
+  // Water
+  const waterRegionTop = Math.floor((2 * height) / 3); // Only bottom ~55%
   const minSaturation = 0.2;
   const minLightness = 0.15;
   const maxLightness = 0.85;
-  const minHue = 0.5; // cyan-ish
-  const maxHue = 0.75; // blue-ish
+  const minHue = 0.5; // Cyan-ish
+  const maxHue = 0.75; // Blue-ish
 
-  // true blue
+  // True blue
   const waterMask = [];
   for (let y = 0; y < height; y++) {
     waterMask[y] = new Array(width).fill(false);
@@ -1242,7 +1213,7 @@ Filters.rippleFilter = function (image, value) {
     }
   }
 
-  // apply ripple where ripple mask is true
+  // Apply ripple where ripple mask is true
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const originalColor = image.getPixel(x, y);
@@ -1277,10 +1248,11 @@ Filters.rippleFilter = function (image, value) {
  * the image, making objects like leaves and trees appear as though they are
  * blowing in the wind.
  * @param {!Image426} image
- * @param {number} factor
+ * @param {number} speed The speed of the wind (1-5).
+ * @param {number} direction The direction of the wind (left or right).
  * @returns {!Image426} The result image.
  */
-Filters.windFilter = function (image, factor) {
+Filters.windFilter = function (image, speed, direction) {
   let newImg = new Image426(image.width, image.height);
 
   // Use global animation time if available (continuously increasing), otherwise use 0
@@ -1295,10 +1267,18 @@ Filters.windFilter = function (image, factor) {
       const hsl = color.toHsl();
 
       if (hsl.data[0] >= 0.22 && hsl.data[0] <= 0.39) {
-        let output = image.getPixel(
-          x + Math.round(factor * Math.sin(time)),
-          y + Math.round(factor * Math.sin(time))
-        );
+        let output;
+        if (direction === "left") {
+          output = image.getPixel(
+            x + Math.round(speed * Math.sin(time)),
+            y + Math.round(speed * Math.sin(time))
+          );
+        } else {
+          output = image.getPixel(
+            x - Math.round(speed * Math.sin(time)),
+            y - Math.round(speed * Math.sin(time))
+          );
+        }
 
         newImg.setPixel(x, y, output);
       } else {
