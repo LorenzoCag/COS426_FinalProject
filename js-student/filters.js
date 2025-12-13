@@ -806,63 +806,6 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
   console.log(linesFile);
   const vectors = Parser.parseJsonFile(linesFile);
 
-  const w = image.width,
-    h = image.height;
-  const cx = (w - 1) / 2,
-    cy = (h - 1) / 2; // middle of image
-  const rMax = Math.hypot(cx, cy); // diagonal
-  const out = new Image426(w, h);
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const dx = x - cx,
-        dy = y - cy;
-      const r = Math.hypot(dx, dy);
-      const t = rMax > 0 ? Math.min(Math.max(r / rMax, 0), 1) : 0;
-      const ang = t * radians; // linear increase
-      const cosA = Math.cos(ang),
-        sinA = Math.sin(ang);
-
-      // inverse map
-      const sx = cx + dx * cosA + dy * -sinA;
-      const sy = cy + dx * sinA + dy * cosA;
-
-      out.setPixel(x, y, Filters.samplePixel(image, sx, sy, sampleMode));
-    }
-  }
-
-  // copy back
-  for (let yy = 0; yy < h; yy++)
-    for (let xx = 0; xx < w; xx++) image.setPixel(xx, yy, out.getPixel(xx, yy));
-  return image;
-};
-
-/**
- * Morphs two images together using Beier92.
- * @param {!Image426} initialImg - The initial (before) image.
- * @param {number} alpha - The morph time.
- * @param {"point"|"bilinear"|"gaussian"} sampleMode - The sampling mode.
- * @param {number} radialCutoff - Measures the distance cutoff of the vector field for
- * a single vector scaled by its length
- * @param {number} angularCutoff Measures the cutoff of the vector field for a
- * single vector based on the angle made with that vector
- * @param {string} linesFile - A JSON file containing the corresponding flow vector
- * @returns {!Image426} The result image.
- */
-Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
-  /**
-   * The corresponding morph lines between the initial and final images. Each
-   * object in the `lines.initial` and `lines.final` arrays represents a line
-   * from (x0, y0) to (x1, y1). The first line of `lines.initial` maps to the
-   * first line of `lines.final`, and so on (i.e., the arrays have the same
-   * length).
-   * @type {
-   *     {vectors: !Array<{x0: number, y0: number, x1: number, y1: number}>}
-   * }
-   */
-  console.log(linesFile);
-  const vectors = Parser.parseJsonFile(linesFile);
-
   const finalImg = initialImg.createCopy();
 
   const radialCutoff = 0.7;
@@ -1087,12 +1030,12 @@ Filters.breatheFilter = function (image, intensity) {
           // Displacement stronger at top
           const topStrength = 1.0 - normalizedY; // 1.0 at top, 0.0 at horizon
 
-          // Breathing motion
-          // const breathingPhase = Math.sin(time * 0.7) * 0.5 + 0.5; // 0 to 1
+          // Breathing motion - use periodic phase instead of linear time
+          const phase = Math.sin(time * 0.7);
 
-          // Vertical displacement
+          // Vertical displacement (oscillating between -maxVerticalDisplacement and +maxVerticalDisplacement)
           const verticalDisplacement =
-            time * 0.7 * maxVerticalDisplacement * topStrength;
+            phase * maxVerticalDisplacement * topStrength;
 
           // Vertical displacement
           const sourceY = y + verticalDisplacement;
@@ -1103,9 +1046,9 @@ Filters.breatheFilter = function (image, intensity) {
             "bilinear"
           );
 
-          // Apply brightnesss
+          // Apply brightness (oscillating between 1.0 - brightnessPulseAmount and 1.0 + brightnessPulseAmount)
           const brightnessMultiplier =
-            1.0 + time * 0.7 * brightnessPulseAmount * topStrength;
+            1.0 + phase * brightnessPulseAmount * topStrength;
 
           const finalColor = new PixelColor(
             [
