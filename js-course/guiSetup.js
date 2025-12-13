@@ -14,7 +14,7 @@ GuiConfig.imageNames = [
   "exampleWater.png",
   "impressionSunrise.png",
   "jacksonPollock.png",
-  "laGrenouillére.png",
+  "laGrenouillère.png",
   "starryNight.png",
   "starryNightOverTheRhône.png",
   "theScream.png",
