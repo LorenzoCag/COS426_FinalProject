@@ -387,7 +387,7 @@ GuiConfig.filterDefs = GuiConfig.FilterDef.fromArray([
         name: "speed",
         type: GuiConfig.ParamDef.Type.SLIDER,
         defaultVal: 1,
-        sliderRange: { min: 1, max: 5 },
+        sliderRange: { min: 1, max: 10 },
       },
       directionParam,
     ],
