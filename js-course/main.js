@@ -33,12 +33,9 @@ var Main = Main || {
   // Real-time continuous animation system
   continuousAnimationRunning: false,
   continuousAnimationFrameId: null,
-  continuousAnimationStartTime: 0,
+  continuousAnimationLastFrameTime: 0, // Last frame time for delta calculation
   continuousAnimationSpeed: 1.0, // Animation speed multiplier
-  continuousAnimationFilterInst: null,
-  continuousAnimationLastUpdateTime: 0,
-  continuousAnimationUpdateInterval: 50, // Update filter every 50ms (~20fps)
-  animationTime: 0, // Global time value for ripple animation (continuously increasing)
+  animationTime: 0, // Global time value in seconds (continuously increasing)
 };
 
 Main.refreshDisplay = function () {
@@ -153,8 +150,7 @@ Main.applyFilters = function () {
     } else if (filterDef.isFilter) {
       // Apply
       
-      const isAnimating = Main.continuousAnimationRunning && 
-                         Main.continuousAnimationFilterInst === filterInst;
+      const isAnimating = Main.continuousAnimationRunning;
       
       if (
         !isAnimating &&
@@ -299,29 +295,53 @@ Main.applyFilters = function () {
   }
 };
 
+/**
+ * Checks if the filter history contains any time-based animated filters.
+ * @returns {boolean} True if any animated filters are present.
+ */
+Main.historyHasAnimatedFilters = function () {
+  const animatedFilterNames = ["Sparkle", "Breathe", "Ripple", "Wind"];
+  for (const filterInst of Gui.historyFilters) {
+    if (filterInst && filterInst.filterDef) {
+      const filterName = filterInst.filterDef.name;
+      if (animatedFilterNames.includes(filterName)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 /** Updates the view when the GUI controls change. */
 Main.handleControlsChanged = function () {
   if (!Main.usingMeshes && !Main.allImagesLoaded) return;
   Main.totalApplyTimeSinceFirstFilter = 0;
+  
+  // Auto-start/stop animation based on filter history
+  if (Main.historyHasAnimatedFilters()) {
+    if (!Main.continuousAnimationRunning) {
+      Main.startContinuousAnimation();
+    }
+  } else {
+    if (Main.continuousAnimationRunning) {
+      Main.stopContinuousAnimation();
+    }
+  }
+  
   Main.applyFilters();
 };
 
 /**
- * Starts continuous real-time animation for a filter parameter.
- * @param {!Object} filterInst - The filter instance to animate.
- * @param {number} paramIndex - The index of the parameter to animate.
+ * Starts continuous real-time animation for all time-based filters.
  */
-Main.startContinuousAnimation = function (filterInst, paramIndex) {
+Main.startContinuousAnimation = function () {
   if (Main.continuousAnimationRunning) {
-    Main.stopContinuousAnimation();
+    return; // Already running
   }
 
   Main.continuousAnimationRunning = true;
-  Main.continuousAnimationStartTime = performance.now();
-  Main.continuousAnimationLastUpdateTime = 0;
+  Main.continuousAnimationLastFrameTime = performance.now();
   Main.animationTime = 0; // Reset time when starting
-  Main.continuousAnimationFilterInst = filterInst;
-  Main.continuousAnimationParamIndex = paramIndex;
 
   console.log('Starting continuous animation');
   Main.continuousAnimationLoop();
@@ -341,27 +361,24 @@ Main.stopContinuousAnimation = function () {
 };
 
 /**
- * Continuous animation loop that updates filter parameters in real-time.
- * For ripple animation, this continuously increases time while keeping value fixed.
+ * Global animation loop that updates all time-based filters simultaneously.
+ * Advances Main.animationTime and recomputes the full filter pipeline each frame.
  */
 Main.continuousAnimationLoop = function () {
   if (!Main.continuousAnimationRunning) return;
 
   const now = performance.now();
-  const elapsed = (now - Main.continuousAnimationStartTime) * Main.continuousAnimationSpeed;
   
-  // Continuously increase animation time (in radians, so ripples flow outward)
-  // Time increases indefinitely to create continuous flow
-  Main.animationTime = elapsed * 0.001;
+  // Calculate delta time since last frame (in seconds)
+  const dt = (now - Main.continuousAnimationLastFrameTime) / 1000.0;
+  Main.continuousAnimationLastFrameTime = now;
   
-
+  // Advance animation time continuously
+  Main.animationTime += dt * Main.continuousAnimationSpeed;
   
-  // Throttle filter updates - only update every n milliseconds
-  if (now - Main.continuousAnimationLastUpdateTime >= Main.continuousAnimationUpdateInterval) {
-    Main.continuousAnimationLastUpdateTime = now;
-    // Trigger filter reapplication (value stays the same, time increases)
-    Main.handleControlsChanged();
-  }
+  // Recompute the full filter pipeline with updated time
+  Main.totalApplyTimeSinceFirstFilter = 0;
+  Main.applyFilters();
 
   Main.continuousAnimationFrameId = requestAnimationFrame(() => Main.continuousAnimationLoop());
 };

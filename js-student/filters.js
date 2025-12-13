@@ -1030,12 +1030,12 @@ Filters.breatheFilter = function (image, intensity) {
           // Displacement stronger at top
           const topStrength = 1.0 - normalizedY; // 1.0 at top, 0.0 at horizon
 
-          // Breathing motion
-          // const breathingPhase = Math.sin(time * 0.7) * 0.5 + 0.5; // 0 to 1
+          // Breathing motion - use periodic phase instead of linear time
+          const phase = Math.sin(time * 0.7);
 
-          // Vertical displacement
+          // Vertical displacement (oscillating between -maxVerticalDisplacement and +maxVerticalDisplacement)
           const verticalDisplacement =
-            time * 0.7 * maxVerticalDisplacement * topStrength;
+            phase * maxVerticalDisplacement * topStrength;
 
           // Vertical displacement
           const sourceY = y + verticalDisplacement;
@@ -1046,9 +1046,9 @@ Filters.breatheFilter = function (image, intensity) {
             "bilinear"
           );
 
-          // Apply brightnesss
+          // Apply brightness (oscillating between 1.0 - brightnessPulseAmount and 1.0 + brightnessPulseAmount)
           const brightnessMultiplier =
-            1.0 + time * 0.7 * brightnessPulseAmount * topStrength;
+            1.0 + phase * brightnessPulseAmount * topStrength;
 
           const finalColor = new PixelColor(
             [
