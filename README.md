@@ -32,8 +32,8 @@
 
 ## Demo
 
-- [YouTube Video](https://youtu.be/-ffpzzDWOjU?si=D9xDvD19yt3WLFQt)
+- [Video](https://youtu.be/-ffpzzDWOjU?si=D9xDvD19yt3WLFQt)
 
 ## Writeup
 
-- ADD LINK HERE...
+- [Writeup](https://docs.google.com/document/d/11z_xLaY4zS-hzPcsA11KZRiV5dgkltdr0iOWELIbs8U/edit?usp=sharing)
