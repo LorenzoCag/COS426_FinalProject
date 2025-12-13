@@ -803,22 +803,20 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
    *     {vectors: !Array<{x0: number, y0: number, x1: number, y1: number}>}
    * }
    */
-  console.log(linesFile);
   const vectors = Parser.parseJsonFile(linesFile);
 
   const finalImg = initialImg.createCopy();
 
-  const radialCutoff = 0.7;
-  const angularCutoff = Math.PI / 2.5;
+  const r = 0.7;
+  const phi = Math.PI / 2.5;
 
-  const fadeTime = 0.7;
-  const fadeMax = 0.7;
-
-  alpha = 0.7 * alpha + 0.3;
+  const alphaPrime = 0.7;
+  const alphaMax = 0.7;
+  const beta = 20;
 
   const fadeAlpha = Math.max(
     0,
-    fadeMax * ((alpha - fadeTime) / (1 - fadeTime))
+    alphaMax * ((alpha - alphaPrime) / (1 - alphaPrime))
   );
 
   const blendColors = function (colorA, colorB) {
@@ -849,10 +847,10 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
 
   const displacement = function (vector, x, y) {
     const vecLen = Math.hypot(vector.x1 - vector.x0, vector.y1 - vector.y0);
-    const r = Math.max(0, 1 - dist(vector, x, y) / (radialCutoff * vecLen));
-    const theta = Math.max(0, 1 - (1 / angularCutoff) * angl(vector, x, y));
+    const B = Math.max(0, 1 - dist(vector, x, y) / (r * vecLen));
+    const C = Math.max(0, 1 - (1 / phi) * angl(vector, x, y));
 
-    const a = r * theta * alpha;
+    const a = B * C * alpha;
     const dx = vector.x1 - vector.x0;
     const dy = vector.y1 - vector.y0;
 
@@ -868,7 +866,7 @@ Filters.flowFilter = function (initialImg, alpha, sampleMode, linesFile) {
         const xF = x + disp.dx;
         const yF = y + disp.dy;
 
-        if (finalImg.validCoords(xF, yF) && dispStr > 20) {
+        if (finalImg.validCoords(xF, yF) && dispStr > beta) {
           const colorA = initialImg.getPixel(x, y);
           const colorB = initialImg.getPixel(xF, yF);
           finalImg.setPixel(xF, yF, blendColors(colorA, colorB));
